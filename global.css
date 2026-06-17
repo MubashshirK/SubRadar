@@ -90,8 +90,12 @@
         @apply ml-4 text-2xl font-sans-bold text-primary;
     }
 
+    .home-add-icon-wrapper {
+        @apply size-10 rounded-full border-2 border-gray-300 flex items-center justify-center;
+    }
+
     .home-add-icon {
-        @apply size-12;
+        @apply size-6;
     }
 
     /* Balance Card — key visual; slate-blue instead of terracotta */
