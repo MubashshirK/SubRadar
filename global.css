@@ -17,6 +17,13 @@
     --color-destructive: #e03e3e;
     --color-subscription: #e8f3ff;    /* soft blue wash for expanded cards */
 
+    --font-sans: sans-regular;
+    --font-sans-light: sans-light;
+    --font-sans-medium: sans-medium;
+    --font-sans-semibold: sans-semibold;
+    --font-sans-bold: sans-bold;
+    --font-sans-extrabold: sans-extrabold;
+
     /* Spacing */
     --spacing-0: 0px;
     --spacing-1: 4px;
