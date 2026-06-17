@@ -133,7 +133,7 @@
     }
 
     .list-action-text {
-        @apply text-sm font-sans-semibold text-primary;
+        @apply text-lg font-sans-semibold text-primary;
     }
 
     /* Upcoming Cards */
@@ -146,7 +146,7 @@
     }
 
     .upcoming-icon {
-        @apply size-14;
+        @apply size-12;
     }
 
     .upcoming-price {
