@@ -54,12 +54,25 @@ export default function App() {
             />
         </View>
 
-        <View>
+        <View className="flex-1">
             <ListHeading title="All Subscription" />
-            <SubscriptionCard
-                {...HOME_SUBSCRIPTIONS[0]}
-                expanded={expendedSubscriptionId === HOME_SUBSCRIPTIONS[0].id}
-                onPress={() => setExpendedSubscriptionId((currentId) => (currentId === HOME_SUBSCRIPTIONS[0].id ? null: HOME_SUBSCRIPTIONS[0].id))}
+
+            <FlatList
+                className="flex-1"
+                data={HOME_SUBSCRIPTIONS}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                    <SubscriptionCard
+                        { ...item}
+                        expanded={expendedSubscriptionId === item.id}
+                        onPress={() => setExpendedSubscriptionId((currentId) =>
+                            (currentId === item.id ? null : item.id))}
+                    />
+                )}
+                extraData={expendedSubscriptionId}
+                ItemSeparatorComponent={() => <View className="h-4" /> }
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={<Text className="home-empty-state">No Subscriptions yet.</Text>}
             />
         </View>
     </SafeAreaView>
