@@ -17,6 +17,13 @@
     --color-destructive: #e03e3e;
     --color-subscription: #e8f3ff;    /* soft blue wash for expanded cards */
 
+    --font-sans: sans-regular;
+    --font-sans-light: sans-light;
+    --font-sans-medium: sans-medium;
+    --font-sans-semibold: sans-semibold;
+    --font-sans-bold: sans-bold;
+    --font-sans-extrabold: sans-extrabold;
+
     /* Spacing */
     --spacing-0: 0px;
     --spacing-1: 4px;
@@ -83,8 +90,12 @@
         @apply ml-4 text-2xl font-sans-bold text-primary;
     }
 
+    .home-add-icon-wrapper {
+        @apply size-10 rounded-full border-2 border-gray-300 flex items-center justify-center;
+    }
+
     .home-add-icon {
-        @apply size-12;
+        @apply size-6;
     }
 
     /* Balance Card — key visual; slate-blue instead of terracotta */
@@ -122,7 +133,7 @@
     }
 
     .list-action-text {
-        @apply text-sm font-sans-semibold text-primary;
+        @apply text-lg font-sans-semibold text-primary;
     }
 
     /* Upcoming Cards */
@@ -135,7 +146,7 @@
     }
 
     .upcoming-icon {
-        @apply size-14;
+        @apply size-12;
     }
 
     .upcoming-price {
