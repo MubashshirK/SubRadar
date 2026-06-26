@@ -1,8 +1,8 @@
 import { useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import React from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -21,6 +21,7 @@ export default function SignUpScreen() {
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
   const [code, setCode] = React.useState("");
   const [localErrors, setLocalErrors] = React.useState<{
     email?: string;
@@ -99,143 +100,134 @@ export default function SignUpScreen() {
 
   if (signUp.status === "complete") return null;
 
+  /* ─────────── Verification code view ─────────── */
   if (isVerifying) {
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 bg-background"
+        className="flex-1 bg-white"
       >
-        <ScrollView
-          className="flex-1"
-          contentContainerClassName="grow px-6 pb-10 pt-16"
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="items-center mb-10">
-            <View className="size-16 items-center justify-center rounded-2xl bg-accent mb-5">
-              <Text className="text-3xl font-sans-extrabold text-white">S</Text>
-            </View>
-            <Text className="text-2xl font-sans-bold text-primary">
-              SubRadar
-            </Text>
-            <Text className="text-xs font-sans-semibold uppercase tracking-[1px] text-muted-foreground">
-              Track. Manage. Save.
-            </Text>
-          </View>
-
-          <View className="rounded-3xl border border-border bg-card p-7">
-            <Text className="text-2xl font-sans-bold text-primary mb-2">
-              Check your inbox
-            </Text>
-            <Text className="text-base font-sans-medium text-muted-foreground mb-8 leading-5">
-              We sent a verification code to{"\n"}
-              <Text className="font-sans-bold text-primary">
-                {emailAddress}
-              </Text>
-            </Text>
-
-            <Pressable onPress={() => codeInputRef.current?.focus()}>
-              <View className="flex-row justify-center gap-2.5 mb-7">
-                {Array.from({ length: CODE_LENGTH }).map((_, i) => (
-                  <View
-                    key={i}
-                    className={`size-13 rounded-2xl border-2 items-center justify-center
-                      ${code[i] ? "border-accent bg-accent/5" : "border-border bg-background"}
-                      ${code.length === i && code.length < CODE_LENGTH ? "border-accent/40" : ""}`}
-                  >
-                    <Text className="text-2xl font-sans-bold text-primary">
-                      {code[i] || ""}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </Pressable>
-
-            <TextInput
-              ref={codeInputRef}
-              className="absolute opacity-0"
-              value={code}
-              onChangeText={(t) =>
-                setCode(t.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH))
-              }
-              keyboardType="number-pad"
-              maxLength={CODE_LENGTH}
-              autoFocus
-            />
-
-            {errors.fields.code && (
-              <View className="flex-row items-center gap-2 mb-4">
-                <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="text-xs font-sans-medium text-destructive flex-1">
-                  {errors.fields.code.message}
+        <View className="flex-1 justify-between">
+          <ScrollView
+            className="flex-1"
+            contentContainerClassName="grow items-center justify-center px-8"
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="w-full max-w-[360px]">
+              <Text className="auth-title">Check your inbox</Text>
+              <Text className="auth-subtitle mt-2">
+                We sent a verification code to{"\n"}
+                <Text className="font-sans-semibold text-primary">
+                  {emailAddress}
                 </Text>
-              </View>
-            )}
-
-            <Pressable
-              className={`flex-row items-center justify-center gap-2 rounded-2xl bg-accent py-4 ${!canVerify ? "opacity-40" : ""}`}
-              onPress={handleVerify}
-              disabled={!canVerify}
-            >
-              {isFetching && <ActivityIndicator size="small" color="#fff" />}
-              <Text className="text-base font-sans-bold text-white">
-                {isFetching ? "Verifying…" : "Verify email"}
               </Text>
-            </Pressable>
 
-            <Pressable
-              className="items-center rounded-2xl border border-accent/25 py-3.5 mt-3"
-              onPress={() => signUp.verifications.sendEmailCode()}
-              disabled={isFetching}
-            >
-              <Text className="text-sm font-sans-semibold text-accent">
-                Resend code
+              <Pressable onPress={() => codeInputRef.current?.focus()}>
+                <View className="auth-code-row mt-8">
+                  {Array.from({ length: CODE_LENGTH }).map((_, i) => (
+                    <View
+                      key={i}
+                      className={`auth-code-box ${
+                        code[i]
+                          ? "auth-code-box-filled"
+                          : code.length === i && code.length < CODE_LENGTH
+                            ? "auth-code-box-active"
+                            : ""
+                      }`}
+                    >
+                      <Text className="auth-code-digit">{code[i] || ""}</Text>
+                    </View>
+                  ))}
+                </View>
+              </Pressable>
+
+              <TextInput
+                ref={codeInputRef}
+                className="absolute opacity-0"
+                value={code}
+                onChangeText={(t) =>
+                  setCode(t.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH))
+                }
+                keyboardType="number-pad"
+                maxLength={CODE_LENGTH}
+                autoFocus
+              />
+
+              {errors.fields.code && (
+                <View className="mb-4 flex-row items-center gap-2">
+                  <View className="size-1.5 rounded-full bg-destructive" />
+                  <Text className="auth-error flex-1">
+                    {errors.fields.code.message}
+                  </Text>
+                </View>
+              )}
+
+              <Pressable
+                className={`auth-button mt-8 ${!canVerify ? "auth-button-disabled" : ""}`}
+                onPress={handleVerify}
+                disabled={!canVerify}
+              >
+                <Text className="auth-button-text">Verify email</Text>
+              </Pressable>
+
+              <Pressable
+                className="auth-secondary-button mt-4"
+                onPress={() => signUp.verifications.sendEmailCode()}
+                disabled={isFetching}
+              >
+                <Text className="auth-secondary-button-text">Resend code</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+
+          <View className="items-center px-8 pb-8 pt-4">
+            <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+              By signing up, you agree to our{" "}
+              <Text className="font-sans-semibold text-primary">
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text className="font-sans-semibold text-primary">
+                Privacy Policy
               </Text>
-            </Pressable>
+            </Text>
           </View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     );
   }
 
+  /* ─────────── Sign-up form view ─────────── */
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
+      className="flex-1 bg-white"
     >
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="grow px-6 pb-10 pt-16"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="items-center mb-10">
-          <View className="size-16 items-center justify-center rounded-2xl bg-accent mb-5">
-            <Text className="text-3xl font-sans-extrabold text-white">S</Text>
-          </View>
-          <Text className="text-2xl font-sans-bold text-primary">SubRadar</Text>
-          <Text className="text-xs font-sans-semibold uppercase tracking-[1px] text-muted-foreground">
-            Track. Manage. Save.
-          </Text>
-        </View>
+      <View className="flex-1 justify-between">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="grow items-center justify-center px-8"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="w-full max-w-[360px]">
+            <Text className="auth-title">Sign up</Text>
+            <Text className="auth-subtitle">
+              Already have an account?{" "}
+              <Link href="/(auth)/sign-in">
+                <Text className="auth-subtitle-link">Sign in</Text>
+              </Link>
+            </Text>
 
-        <View className="rounded-3xl border border-border bg-card p-7">
-          <Text className="text-2xl font-sans-bold text-primary">
-            Create account
-          </Text>
-          <Text className="text-base font-sans-medium text-muted-foreground mt-1.5 mb-7">
-            Start tracking your subscriptions in seconds.
-          </Text>
-
-          <View className="gap-5">
-            <View>
-              <Text className="text-sm font-sans-semibold text-primary mb-2">
-                Email
-              </Text>
+            {/* Email input */}
+            <View
+              className={`auth-input-row ${localErrors.email || errors.fields.emailAddress ? "border-destructive" : ""}`}
+            >
+              <Mail size={20} color="#999" strokeWidth={1.5} />
               <TextInput
-                className={`rounded-2xl border bg-background px-5 py-4 text-base font-sans-medium text-primary
-                  ${localErrors.email || errors.fields.emailAddress ? "border-destructive" : "border-border"}`}
+                className="auth-input"
+                placeholder="Email Address"
                 placeholderTextColor="rgba(55, 53, 47, 0.35)"
                 value={emailAddress}
-                placeholder="you@example.com"
                 onChangeText={(v) => {
                   setEmailAddress(v);
                   if (localErrors.email)
@@ -245,70 +237,82 @@ export default function SignUpScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              {(localErrors.email || errors.fields.emailAddress) && (
-                <View className="flex-row items-center gap-2 mt-2">
-                  <View className="size-1.5 rounded-full bg-destructive" />
-                  <Text className="text-xs font-sans-medium text-destructive flex-1">
-                    {localErrors.email ??
-                      errors.fields.emailAddress!.message}
-                  </Text>
-                </View>
-              )}
             </View>
+            {(localErrors.email || errors.fields.emailAddress) && (
+              <View className="mt-2 flex-row items-center gap-2">
+                <View className="size-1.5 rounded-full bg-destructive" />
+                <Text className="auth-error flex-1">
+                  {localErrors.email ?? errors.fields.emailAddress!.message}
+                </Text>
+              </View>
+            )}
 
-            <View>
-              <Text className="text-sm font-sans-semibold text-primary mb-2">
-                Password
-              </Text>
+            {/* Password input */}
+            <View
+              className={`auth-input-row mt-4 ${localErrors.password || errors.fields.password ? "border-destructive" : ""}`}
+            >
+              <Lock size={20} color="#999" strokeWidth={1.5} />
               <TextInput
-                className={`rounded-2xl border bg-background px-5 py-4 text-base font-sans-medium text-primary
-                  ${localErrors.password || errors.fields.password ? "border-destructive" : "border-border"}`}
+                className="auth-input"
+                placeholder="Password (min 8 characters)"
                 placeholderTextColor="rgba(55, 53, 47, 0.35)"
                 value={password}
-                placeholder="At least 8 characters"
                 onChangeText={(v) => {
                   setPassword(v);
                   if (localErrors.password)
                     setLocalErrors((p) => ({ ...p, password: undefined }));
                 }}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
-              {(localErrors.password || errors.fields.password) && (
-                <View className="flex-row items-center gap-2 mt-2">
-                  <View className="size-1.5 rounded-full bg-destructive" />
-                  <Text className="text-xs font-sans-medium text-destructive flex-1">
-                    {localErrors.password ??
-                      errors.fields.password!.message}
-                  </Text>
-                </View>
-              )}
+              <Pressable
+                className="auth-eye"
+                onPress={() => setShowPassword((p) => !p)}
+              >
+                {showPassword ? (
+                  <Eye size={20} color="#999" strokeWidth={1.5} />
+                ) : (
+                  <EyeOff size={20} color="#999" strokeWidth={1.5} />
+                )}
+              </Pressable>
             </View>
+            {(localErrors.password || errors.fields.password) && (
+              <View className="mt-2 flex-row items-center gap-2">
+                <View className="size-1.5 rounded-full bg-destructive" />
+                <Text className="auth-error flex-1">
+                  {localErrors.password ?? errors.fields.password!.message}
+                </Text>
+              </View>
+            )}
 
+            {/* Create account button */}
             <Pressable
-              className={`flex-row items-center justify-center gap-2 rounded-2xl bg-accent py-4 ${!canSubmit ? "opacity-40" : ""}`}
+              className={`auth-button mt-8 ${!canSubmit ? "auth-button-disabled" : ""}`}
               onPress={handleSubmit}
               disabled={!canSubmit}
             >
-              {isFetching && <ActivityIndicator size="small" color="#fff" />}
-              <Text className="text-base font-sans-bold text-white">
-                {isFetching ? "Creating account…" : "Create account"}
+              <Text className="auth-button-text">
+                {isFetching ? "Creating account\u2026" : "Create account"}
               </Text>
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
 
-        <View className="flex-row items-center justify-center gap-1 mt-6">
-          <Text className="text-sm font-sans-medium text-muted-foreground">
-            Already have an account?
+        <View className="items-center px-8 pb-8 pt-4">
+          <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+            By signing up, you agree to our{" "}
+            <Text className="font-sans-semibold text-primary">
+              Terms of Service
+            </Text>{" "}
+            and{" "}
+            <Text className="font-sans-semibold text-primary">
+              Privacy Policy
+            </Text>
           </Text>
-          <Link href="/(auth)/sign-in">
-            <Text className="text-sm font-sans-bold text-accent">Sign in</Text>
-          </Link>
         </View>
+      </View>
 
-        <View nativeID="clerk-captcha" />
-      </ScrollView>
+      <View nativeID="clerk-captcha" />
     </KeyboardAvoidingView>
   );
 }
