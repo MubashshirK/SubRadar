@@ -56,23 +56,6 @@
 
 @layer components {
 
-    /* Tab Bar */
-    .tabs-icon {
-        @apply size-12 items-center justify-center;
-    }
-
-    .tabs-pill {
-        @apply size-12 items-center justify-center rounded-full bg-transparent;
-    }
-
-    .tabs-active {
-        @apply bg-accent/10;
-    }
-
-    .tabs-glyph {
-        @apply size-6;
-    }
-
     /* Home Header */
     .home-header {
         @apply mb-2.5 flex-row items-center justify-between;
