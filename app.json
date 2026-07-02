@@ -39,14 +39,21 @@
           }
         }
       ],
-      [ "expo-font" , { "fonts" : [
-        "./assets/fonts/PlusJakartaSans-Regular.tff",
-        "./assets/fonts/PlusJakartaSans-Bold.tff",
-        "./assets/fonts/PlusJakartaSans-Medium.tff",
-        "./assets/fonts/PlusJakartaSans-SemiBold.tff",
-        "./assets/fonts/PlusJakartaSans-ExtraBold.tff",
-        "./assets/fonts/PlusJakartaSans-Light.tff"
-      ]}]
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/PlusJakartaSans-Regular.tff",
+            "./assets/fonts/PlusJakartaSans-Bold.tff",
+            "./assets/fonts/PlusJakartaSans-Medium.tff",
+            "./assets/fonts/PlusJakartaSans-SemiBold.tff",
+            "./assets/fonts/PlusJakartaSans-ExtraBold.tff",
+            "./assets/fonts/PlusJakartaSans-Light.tff"
+          ]
+        }
+      ],
+      "@clerk/expo",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
