@@ -11,7 +11,6 @@ import { formatCurrency } from "@/lib/utils";
 import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
-import { usePostHog } from "posthog-react-native";
 import { useMemo, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +18,6 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
   const { user } = useUser();
-  const posthog = usePostHog();
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
@@ -34,34 +32,29 @@ export default function App() {
       .filter(
         (sub) =>
           sub.status === "active" &&
+          !!sub.renewalDate &&
           dayjs(sub.renewalDate).isAfter(now) &&
           dayjs(sub.renewalDate).isBefore(nextWeek),
       )
-      .sort((a, b) => dayjs(a.renewalDate).diff(dayjs(b.renewalDate)));
+      .sort((a, b) => dayjs(a.renewalDate!).diff(dayjs(b.renewalDate!)))
+      .map((sub) => ({
+        id: sub.id,
+        icon: sub.icon,
+        name: sub.name,
+        price: sub.price,
+        currency: sub.currency,
+        daysLeft: dayjs(sub.renewalDate!).diff(now, "day"),
+      }));
   }, [subscriptions]);
 
   const handleSubscriptionPress = (item: Subscription) => {
-    const isExpanding = expandedSubscriptionId !== item.id;
     setExpandedSubscriptionId((currentId) =>
       currentId === item.id ? null : item.id,
-    );
-    posthog.capture(
-      isExpanding ? "subscription_expanded" : "subscription_collapsed",
-      {
-        subscription_name: item.name,
-        subscription_id: item.id,
-      },
     );
   };
 
   const handleCreateSubscription = (newSubscription: Subscription) => {
     addSubscription(newSubscription);
-    posthog.capture("subscription_created", {
-      subscription_name: newSubscription.name,
-      subscription_price: newSubscription.price,
-      subscription_frequency: newSubscription.frequency,
-      subscription_category: newSubscription.category,
-    });
   };
 
   // Get user display name: firstName, fullName, or email
