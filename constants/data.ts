@@ -1,10 +1,10 @@
 import { icons } from "./icons";
 
 export const tabs: AppTab[] = [
-  { name: "index", title: "Home", icon: "home-outline" },
-  { name: "subscriptions", title: "Subscriptions", icon: "wallet-outline" },
-  { name: "insights", title: "Insights", icon: "stats-chart-outline" },
-  { name: "settings", title: "Settings", icon: "settings-outline" },
+  { name: "index", title: "Home", icon: icons.home },
+  { name: "subscriptions", title: "Subscriptions", icon: icons.wallet },
+  { name: "insights", title: "Insights", icon: icons.activity },
+  { name: "settings", title: "Settings", icon: icons.setting },
 ];
 
 export const HOME_USER = {
@@ -56,7 +56,7 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     price: 77.49,
     currency: "USD",
     billing: "Monthly",
-    renewalDate: "2026-03-20T10:00:00.000Z",
+    renewalDate: "2026-07-05T10:00:00.000Z",
     color: "#f5c542",
   },
   {
@@ -71,7 +71,7 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     price: 9.99,
     currency: "USD",
     billing: "Monthly",
-    renewalDate: "2026-03-24T10:00:00.000Z",
+    renewalDate: "2026-07-08T10:00:00.000Z",
     color: "#e8def8",
   },
   {
@@ -81,12 +81,12 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     plan: "Pro Plan",
     category: "AI Tools",
     paymentMethod: "Amex ending in 1010",
-    status: "paused",
+    status: "active",
     startDate: "2025-06-27T10:00:00.000Z",
     price: 20.0,
     currency: "USD",
     billing: "Monthly",
-    renewalDate: "2026-03-27T10:00:00.000Z",
+    renewalDate: "2026-07-04T10:00:00.000Z",
     color: "#b8d4e3",
   },
   {
@@ -96,12 +96,12 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     plan: "Yearly Access",
     category: "Design",
     paymentMethod: "Visa ending in 7784",
-    status: "cancelled",
+    status: "active",
     startDate: "2024-04-02T10:00:00.000Z",
     price: 119.99,
     currency: "USD",
     billing: "Yearly",
-    renewalDate: "2026-04-02T10:00:00.000Z",
+    renewalDate: "2026-07-07T10:00:00.000Z",
     color: "#b8e8d0",
   },
 ];
