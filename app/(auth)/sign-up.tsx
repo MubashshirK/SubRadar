@@ -113,7 +113,7 @@ export default function SignUpScreen() {
             contentContainerClassName="grow items-center justify-center px-8"
             keyboardShouldPersistTaps="handled"
           >
-            <View className="w-full max-w-[360px]">
+            <View className="w-full max-w-90">
               <Text className="auth-title">Check your inbox</Text>
               <Text className="auth-subtitle mt-2">
                 We sent a verification code to{"\n"}
@@ -209,7 +209,7 @@ export default function SignUpScreen() {
           contentContainerClassName="grow items-center justify-center px-8"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="w-full max-w-[360px]">
+          <View className="w-full max-w-90">
             <Text className="auth-title">Sign up</Text>
             <Text className="auth-subtitle">
               Already have an account?{" "}

@@ -4,12 +4,12 @@ declare global {
   interface AppTab {
     name: string;
     title: string;
-    icon: string;
+    icon: ImageSourcePropType;
   }
 
   interface TabIconProps {
     focused: boolean;
-    icon: string;
+    icon: ImageSourcePropType;
   }
 
   interface Subscription {
@@ -24,6 +24,7 @@ declare global {
     price: number;
     currency?: string;
     billing: string;
+    frequency?: string;
     renewalDate?: string;
     color?: string;
   }
