@@ -182,7 +182,7 @@ const Insights = () => {
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-3xl font-sans-bold text-primary">Insights</Text>
 
-          <View className="flex-row rounded-full bg-muted p-0.5">
+          <View className="flex-row rounded-full bg-white p-0.5">
             <Pressable
               onPress={() => handlePeriodChange("monthly")}
               className={clsx(
@@ -241,7 +241,7 @@ const Insights = () => {
 
         {/* Stats Row */}
         <View className="mb-8 flex-row gap-3">
-          <View className="flex-1 items-center rounded-2xl bg-card p-4">
+          <View className="flex-1 items-center rounded-2xl bg-white p-4">
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Yearly
             </Text>
@@ -249,7 +249,7 @@ const Insights = () => {
               {formatCurrency(yearlyTotal)}
             </Text>
           </View>
-          <View className="flex-1 items-center rounded-2xl bg-card p-4">
+          <View className="flex-1 items-center rounded-2xl bg-white p-4">
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Active
             </Text>
@@ -257,7 +257,7 @@ const Insights = () => {
               {activeSubCount}
             </Text>
           </View>
-          <View className="flex-1 items-center rounded-2xl bg-card p-4">
+          <View className="flex-1 items-center rounded-2xl bg-white p-4">
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Top Category
             </Text>
@@ -352,7 +352,7 @@ const Insights = () => {
           Billing Overview
         </Text>
         <View className="mb-8 flex-row gap-3">
-          <View className="flex-1 rounded-2xl bg-card p-4">
+          <View className="flex-1 rounded-2xl bg-white p-4">
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="repeat-outline" size={16} color="#2f6fed" />
               <Text className="text-xs font-sans-semibold text-muted-foreground">
@@ -372,7 +372,7 @@ const Insights = () => {
               </Text>
             </Text>
           </View>
-          <View className="flex-1 rounded-2xl bg-card p-4">
+          <View className="flex-1 rounded-2xl bg-white p-4">
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="calendar-outline" size={16} color="#0f7b6c" />
               <Text className="text-xs font-sans-semibold text-muted-foreground">
@@ -399,7 +399,7 @@ const Insights = () => {
 
         {/* Smart Insight */}
         {smartInsight && (
-          <View className="mb-6 flex-row gap-3 rounded-2xl bg-card p-5">
+          <View className="mb-6 flex-row gap-3 rounded-2xl bg-white p-5">
             <View className="mt-0.5 h-5 w-1 rounded-full bg-accent" />
             <View className="flex-1">
               <Text className="text-xs font-sans-semibold uppercase tracking-wider text-accent mb-2">

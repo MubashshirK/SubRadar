@@ -3,13 +3,14 @@ import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import { HOME_BALANCE } from "@/constants/data";
-import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
 import { formatCurrency } from "@/lib/utils";
 import { useUser } from "@clerk/expo";
+import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { LinearGradient } from "expo-linear-gradient";
 import { styled } from "nativewind";
 import { useMemo, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
@@ -44,6 +45,7 @@ export default function App() {
         price: sub.price,
         currency: sub.currency,
         daysLeft: dayjs(sub.renewalDate!).diff(now, "day"),
+        color: sub.color,
       }));
   }, [subscriptions]);
 
@@ -80,26 +82,107 @@ export default function App() {
                 <Text className="home-user-name">{displayName}</Text>
               </View>
 
-              <Pressable onPress={() => setIsModalVisible(true)}>
-                <Image source={icons.add} className="home-add-icon" />
+              <Pressable
+                onPress={() => setIsModalVisible(true)}
+                className="size-10 items-center justify-center rounded-full bg-primary"
+              >
+                <Ionicons name="add" size={20} color="#fff" />
               </Pressable>
             </View>
 
-            <View className="home-balance-card">
-              <Text className="home-balance-label">Balance</Text>
+            <LinearGradient
+              colors={["#1a1a2e", "#16213e", "#0f3460"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              className="my-2.5 justify-between gap-4 p-6"
+              style={{ minHeight: 200, borderRadius: 24 }}
+            >
+              <Text className="home-balance-label">Monthly Spend</Text>
 
               <View className="home-balance-row">
                 <Text className="home-balance-amount">
-                  {formatCurrency(HOME_BALANCE.amount)}
+                  {formatCurrency(
+                    subscriptions.reduce(
+                      (sum, sub) =>
+                        sum +
+                        (sub.billing === "Yearly" ? sub.price / 12 : sub.price),
+                      0,
+                    ),
+                  )}
                 </Text>
-                <Text className="home-balance-date">
-                  {dayjs(HOME_BALANCE.nextRenewalDate).format("MM/DD")}
-                </Text>
+                <View className="items-end">
+                  <Text className="home-balance-date">
+                    {dayjs(
+                      subscriptions
+                        .filter((s) => s.renewalDate)
+                        .sort((a, b) =>
+                          dayjs(a.renewalDate!).diff(dayjs(b.renewalDate!)),
+                        )[0]?.renewalDate ?? HOME_BALANCE.nextRenewalDate,
+                    ).format("MMM D")}
+                  </Text>
+                  <Text className="home-balance-date-label">Next renewal</Text>
+                </View>
               </View>
-            </View>
+
+              <View className="home-balance-stats">
+                <View className="home-balance-stat">
+                  <Text className="home-balance-stat-value">
+                    {subscriptions.length}
+                  </Text>
+                  <Text className="home-balance-stat-label">Active</Text>
+                </View>
+                <View className="home-balance-stat">
+                  <Text className="home-balance-stat-value">
+                    {subscriptions.length > 0
+                      ? formatCurrency(
+                          subscriptions.reduce(
+                            (sum, sub) =>
+                              sum +
+                              (sub.billing === "Yearly"
+                                ? sub.price / 12
+                                : sub.price),
+                            0,
+                          ) / subscriptions.length,
+                        )
+                      : "$0.00"}
+                  </Text>
+                  <Text className="home-balance-stat-label">Avg / sub</Text>
+                </View>
+                <View className="home-balance-stat">
+                  <Text className="home-balance-stat-value">
+                    {formatCurrency(
+                      subscriptions.reduce(
+                        (sum, sub) =>
+                          sum +
+                          (sub.billing === "Yearly"
+                            ? sub.price
+                            : sub.price * 12),
+                        0,
+                      ),
+                    )}
+                  </Text>
+                  <Text className="home-balance-stat-label">Yearly</Text>
+                </View>
+              </View>
+            </LinearGradient>
 
             <View className="mb-5">
-              <ListHeading title="Upcoming" />
+              <View className="my-5 flex-row items-center justify-between">
+                <Text className="text-2xl font-sans-bold text-primary">
+                  Upcoming
+                </Text>
+                <Text className="text-sm font-sans-medium text-muted-foreground">
+                  {formatCurrency(
+                    subscriptions.reduce(
+                      (sum, sub) =>
+                        sum +
+                        (sub.billing === "Yearly" ? sub.price / 12 : sub.price),
+                      0,
+                    ),
+                  )}
+                  /mo · {subscriptions.length} subs
+                </Text>
+              </View>
 
               <FlatList
                 data={upcomingSubscriptions}

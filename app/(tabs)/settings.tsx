@@ -106,7 +106,7 @@ const Settings = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f8f8f8]">
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5 pb-32 pt-6"

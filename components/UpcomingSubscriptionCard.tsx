@@ -8,23 +8,37 @@ const UpcomingSubscriptionCard = ({
   daysLeft,
   icon,
   currency,
+  color,
 }: UpcomingSubscription) => {
   return (
-    <View className="upcoming-card">
-      <View className="upcoming-row">
-        <Image source={icon} className="upcoming-icon" />
-        <View>
-          <Text className="upcoming-price">
-            {formatCurrency(price, currency)}
-          </Text>
-          <Text className="upcoming-meta" numberOfLines={1}>
-            {daysLeft > 1 ? `${daysLeft} days left` : "Last day"}
-          </Text>
+    <View
+      className="mr-3 w-44 rounded-2xl border p-3.5"
+      style={{
+        backgroundColor: "#fff",
+        borderWidth: 1,
+        borderColor: "rgba(55, 53, 47, 0.12)",
+      }}
+    >
+      <View className="flex-row items-start justify-between">
+        <View
+          className="size-10 items-center justify-center rounded-xl"
+          style={{ backgroundColor: color ? `${color}22` : "#f7f6f3" }}
+        >
+          <Image source={icon} className="size-6" resizeMode="contain" />
         </View>
+        <Text className="text-sm font-sans-bold text-primary">
+          {formatCurrency(price, currency)}
+        </Text>
       </View>
 
-      <Text className="upcoming-name" numberOfLines={1}>
+      <Text
+        className="mt-3 text-base font-sans-semibold text-primary"
+        numberOfLines={1}
+      >
         {name}
+      </Text>
+      <Text className="mt-0.5 text-xs font-sans-medium text-muted-foreground">
+        {daysLeft > 1 ? `${daysLeft} days left` : "Last day"}
       </Text>
     </View>
   );

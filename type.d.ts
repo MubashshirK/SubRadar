@@ -43,6 +43,7 @@ declare global {
     price: number;
     currency?: string;
     daysLeft: number;
+    color?: string;
   }
 
   interface ListHeadingProps {

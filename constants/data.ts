@@ -24,6 +24,7 @@ export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [
     price: 5.99,
     currency: "USD",
     daysLeft: 2,
+    color: "#b8d4e3",
   },
   {
     id: "notion",
@@ -32,6 +33,7 @@ export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [
     price: 12.0,
     currency: "USD",
     daysLeft: 4,
+    color: "#e8def8",
   },
   {
     id: "figma",
@@ -40,6 +42,7 @@ export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [
     price: 15.0,
     currency: "USD",
     daysLeft: 6,
+    color: "#b8e8d0",
   },
 ];
 
