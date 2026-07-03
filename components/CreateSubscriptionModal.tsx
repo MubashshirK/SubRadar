@@ -76,13 +76,16 @@ interface CreateSubscriptionModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (subscription: Subscription) => void;
+  initialSubscription?: Subscription;
 }
 
 const CreateSubscriptionModal = ({
   visible,
   onClose,
   onSubmit,
+  initialSubscription,
 }: CreateSubscriptionModalProps) => {
+  const isEditing = !!initialSubscription;
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("Monthly");
@@ -131,10 +134,31 @@ const CreateSubscriptionModal = ({
 
   useEffect(() => {
     if (visible) {
-      const timer = setTimeout(() => nameInputRef.current?.focus(), 300);
-      return () => clearTimeout(timer);
+      if (initialSubscription) {
+        setName(initialSubscription.name);
+        setPrice(String(initialSubscription.price));
+        setFrequency((initialSubscription.frequency as Frequency) ?? "Monthly");
+        setCategory((initialSubscription.category as ServiceCategory) ?? "Other");
+        setDomain(initialSubscription.domain ?? "");
+        setPlan(initialSubscription.plan ?? "");
+        setPaymentMethod(initialSubscription.paymentMethod ?? "");
+        if (initialSubscription.startDate) {
+          setStartDateStr(dayjs(initialSubscription.startDate).format("MM/DD/YYYY"));
+        }
+        if (initialSubscription.renewalDate) {
+          const renewal = dayjs(initialSubscription.renewalDate).format("MM/DD/YYYY");
+          setManualRenewalStr(renewal);
+          setRenewalManuallyEdited(true);
+        }
+        setShowDetails(true);
+        setShowCustomDomain(false);
+        setShowSuggestions(false);
+      } else {
+        const timer = setTimeout(() => nameInputRef.current?.focus(), 300);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [visible]);
+  }, [visible, initialSubscription]);
 
   const resetForm = () => {
     setName("");
@@ -219,14 +243,14 @@ const CreateSubscriptionModal = ({
     }
 
     const newSubscription: Subscription = {
-      id: `sub-${Date.now()}`,
+      id: initialSubscription?.id ?? `sub-${Date.now()}`,
       name: name.trim(),
       price: priceVal,
       currency: "USD",
       frequency,
       category: finalCategory,
       status: "active",
-      startDate: finalStartDate.toISOString(),
+      startDate: initialSubscription?.startDate ?? finalStartDate.toISOString(),
       renewalDate: finalRenewalDate.toISOString(),
       icon: icons.plus,
       billing: frequency,
@@ -283,7 +307,7 @@ const CreateSubscriptionModal = ({
             {/* Header */}
             <View className="flex-row items-center justify-between px-6 pb-4 border-b border-border/60">
               <Text className="text-xl font-sans-bold text-primary">
-                New Subscription
+                {isEditing ? "Edit Subscription" : "New Subscription"}
               </Text>
               <Pressable
                 onPress={handleClose}
@@ -658,9 +682,9 @@ const CreateSubscriptionModal = ({
                 onPress={handleSubmit}
                 disabled={!isValidForm}
               >
-                <Ionicons name="add" size={20} color="#fff" />
+                <Ionicons name={isEditing ? "checkmark" : "add"} size={20} color="#fff" />
                 <Text className="text-base font-sans-bold text-white">
-                  Create{displayCostLabel}
+                  {isEditing ? "Save Changes" : `Create${displayCostLabel}`}
                 </Text>
               </Pressable>
             </View>

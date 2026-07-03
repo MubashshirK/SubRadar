@@ -23,7 +23,8 @@ export default function App() {
     string | null
   >(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const { subscriptions, addSubscription } = useSubscriptionStore();
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+  const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
 
   // Get upcoming subscriptions (active subscriptions with renewal date within next 7 days)
   const upcomingSubscriptions = useMemo(() => {
@@ -57,7 +58,23 @@ export default function App() {
   };
 
   const handleCreateSubscription = (newSubscription: Subscription) => {
-    addSubscription(newSubscription);
+    if (editingSubscription) {
+      updateSubscription(newSubscription);
+      setEditingSubscription(null);
+    } else {
+      addSubscription(newSubscription);
+    }
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setEditingSubscription(subscription);
+    setIsModalVisible(true);
+    setExpandedSubscriptionId(null);
+  };
+
+  const handleDeleteSubscription = (id: string) => {
+    removeSubscription(id);
+    setExpandedSubscriptionId(null);
   };
 
   // Get user display name: firstName, fullName, or email
@@ -211,6 +228,8 @@ export default function App() {
             {...item}
             expanded={expandedSubscriptionId === item.id}
             onPress={() => handleSubscriptionPress(item)}
+            onEditPress={() => handleEditSubscription(item)}
+            onCancelPress={() => handleDeleteSubscription(item.id)}
           />
         )}
         extraData={expandedSubscriptionId}
@@ -224,8 +243,9 @@ export default function App() {
 
       <CreateSubscriptionModal
         visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
+        onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
         onSubmit={handleCreateSubscription}
+        initialSubscription={editingSubscription ?? undefined}
       />
     </SafeAreaView>
   );

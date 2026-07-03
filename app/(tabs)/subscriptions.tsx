@@ -16,7 +16,8 @@ const Subscriptions = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const { subscriptions, addSubscription } = useSubscriptionStore();
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+  const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
 
   const categories = useMemo(() => {
     const cats = new Set(
@@ -49,6 +50,26 @@ const Subscriptions = () => {
 
   const handleSubscriptionPress = (item: Subscription) => {
     setExpandedId((currentId) => (currentId === item.id ? null : item.id));
+  };
+
+  const handleDeleteSubscription = (id: string) => {
+    removeSubscription(id);
+    setExpandedId(null);
+  };
+
+  const handleSubmitSubscription = (subscription: Subscription) => {
+    if (editingSubscription) {
+      updateSubscription(subscription);
+      setEditingSubscription(null);
+    } else {
+      addSubscription(subscription);
+    }
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setEditingSubscription(subscription);
+    setIsModalVisible(true);
+    setExpandedId(null);
   };
 
   return (
@@ -141,6 +162,8 @@ const Subscriptions = () => {
               {...item}
               expanded={expandedId === item.id}
               onPress={() => handleSubscriptionPress(item)}
+              onEditPress={() => handleEditSubscription(item)}
+              onCancelPress={() => handleDeleteSubscription(item.id)}
             />
           </View>
         )}
@@ -168,8 +191,9 @@ const Subscriptions = () => {
 
       <CreateSubscriptionModal
         visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onSubmit={addSubscription}
+        onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
+        onSubmit={handleSubmitSubscription}
+        initialSubscription={editingSubscription ?? undefined}
       />
     </SafeAreaView>
   );

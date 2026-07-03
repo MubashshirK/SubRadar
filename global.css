@@ -46,12 +46,6 @@
   --spacing-30: 120px;
 
   /* Typography */
-  --font-sans: sans-regular;
-  --font-sans-light: sans-light;
-  --font-sans-medium: sans-medium;
-  --font-sans-semibold: sans-semibold;
-  --font-sans-bold: sans-bold;
-  --font-sans-extrabold: sans-extrabold;
 }
 
 @layer components {
@@ -160,85 +154,130 @@
     @apply mt-2 text-lg font-sans-bold text-primary;
   }
 
-  /* Subscription Cards */
+  /* Subscription Cards — Clean Design */
   .sub-card {
-    @apply rounded-xl border border-border bg-background p-4;
+    @apply overflow-hidden rounded-2xl border border-border/50 bg-white;
   }
 
-  .sub-card-expanded {
-    @apply bg-subscription border-accent/20;
+  .sub-card-inner {
+    @apply flex-row items-center py-4 pl-3 pr-4;
   }
 
-  .sub-head {
-    @apply flex-row items-center py-2;
+  .sub-icon-ring {
+    @apply shrink-0 rounded-2xl p-0.5;
   }
 
-  .sub-main {
-    @apply min-w-0 flex-1 flex-row items-center gap-3;
+  .sub-icon-bg {
+    @apply size-13 items-center justify-center overflow-hidden rounded-xl bg-white;
   }
 
-  .sub-icon {
-    @apply size-16 rounded-lg;
+  .sub-name {
+    @apply text-[16px] font-sans-bold text-primary;
   }
 
-  .sub-copy {
-    @apply min-w-0 flex-1;
+  .sub-meta-row {
+    @apply mt-0.5 flex-row items-center gap-1.5;
   }
 
-  .sub-title {
-    @apply mb-1 text-lg font-sans-bold text-primary;
+  .sub-meta-icon {
+    @apply size-3.5 text-muted-foreground;
   }
 
-  .sub-meta {
-    @apply text-sm font-sans-medium text-muted-foreground;
+  .sub-meta-text {
+    @apply text-[11px] font-sans-medium text-muted-foreground;
   }
 
-  .sub-price-box {
-    @apply ml-3 shrink-0 items-end;
+  .sub-price-block {
+    @apply ml-3 mt-2 shrink-0 items-end;
   }
 
   .sub-price {
-    @apply mb-1 text-lg font-sans-bold text-primary;
+    @apply text-[14px] font-sans-bold text-primary;
   }
 
-  .sub-billing {
-    @apply text-sm font-sans-medium text-muted-foreground;
+  .sub-billing-label {
+    @apply text-xs font-sans-medium text-muted-foreground;
+  }
+  .sub-status-pill {
+    @apply mt-3 rounded-full px-2.5 py-1;
   }
 
-  .sub-body {
-    @apply mt-6 gap-4;
+  .sub-status-active {
+    @apply bg-success/10;
   }
 
-  .sub-details {
-    @apply gap-6;
+  .sub-status-paused {
+    @apply bg-amber-500/10;
   }
 
-  .sub-row {
-    @apply flex-row items-center justify-between gap-3;
+  .sub-status-cancelled {
+    @apply bg-destructive/10;
   }
 
-  .sub-row-copy {
-    @apply min-w-0 flex-1 flex-row items-center gap-2;
+  .sub-status-text {
+    @apply text-[11px] font-sans-semibold;
   }
 
-  .sub-label {
-    @apply shrink-0 text-base font-sans-medium text-muted-foreground;
+  .sub-status-active-text {
+    @apply text-success;
   }
 
-  .sub-value {
-    @apply flex-1 font-sans-bold text-primary;
+  .sub-status-paused-text {
+    @apply text-amber-600;
   }
 
-  .sub-cancel {
-    @apply mt-2 items-center rounded-xl bg-primary py-4;
+  .sub-status-cancelled-text {
+    @apply text-destructive;
   }
 
-  .sub-cancel-disabled {
-    @apply bg-primary/20;
+  /* Expanded Detail Sections */
+  .sub-section-label {
+    @apply mb-2 text-[11px] font-sans-semibold uppercase tracking-wider text-muted-foreground;
   }
 
-  .sub-cancel-text {
-    @apply font-sans-bold text-white;
+  .sub-detail-group {
+    @apply gap-0.5 rounded-xl bg-muted/40 p-3;
+  }
+
+  .sub-detail-row {
+    @apply flex-row items-center gap-2.5 py-1.5;
+  }
+
+  .sub-detail-icon {
+    @apply size-5 shrink-0 text-muted-foreground;
+  }
+
+  .sub-detail-label {
+    @apply text-[13px] font-sans-medium text-muted-foreground;
+  }
+
+  .sub-detail-value {
+    @apply flex-1 text-right text-[13px] font-sans-semibold text-primary;
+  }
+
+  .sub-detail-subtext {
+    @apply ml-7 text-[11px] font-sans-medium;
+  }
+
+  /* Action Buttons */
+  .sub-actions {
+    @apply mt-5 mb-1 flex-row gap-3;
+  }
+
+  .sub-action-edit {
+    @apply flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-border py-3;
+  }
+
+  .sub-action-delete {
+    @apply flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 py-3;
+  }
+
+  .sub-action-text {
+    @apply text-[13px] font-sans-semibold text-primary;
+  }
+
+  .sub-action-text-delete {
+    @apply text-[13px] font-sans-semibold text-destructive;
   }
 
   .home-empty-state {

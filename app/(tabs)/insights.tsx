@@ -1,18 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-} from "react-native";
-import { Image } from "expo-image";
-import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
-import { styled } from "nativewind";
+import { getLogoUrl } from "@/lib/logo";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
 import { formatCurrency } from "@/lib/utils";
-import { getLogoUrl } from "@/lib/logo";
 import { Ionicons } from "@expo/vector-icons";
 import clsx from "clsx";
+import { Image } from "expo-image";
+import { styled } from "nativewind";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -27,7 +28,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 const FALLBACK_COLORS = ["#e03e3e", "#ea7a53", "#d97706", "#6366f1"];
 
 function getCategoryColor(category: string, index: number): string {
-  return CATEGORY_COLORS[category] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+  return (
+    CATEGORY_COLORS[category] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+  );
 }
 
 function useAnimatedNumber(target: number, duration = 800) {
@@ -58,16 +61,14 @@ const Insights = () => {
 
   const monthlyTotal = useMemo(() => {
     return subscriptions.reduce((sum, sub) => {
-      const monthly =
-        sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+      const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
       return sum + monthly;
     }, 0);
   }, [subscriptions]);
 
   const yearlyTotal = useMemo(() => {
     return subscriptions.reduce((sum, sub) => {
-      const annual =
-        sub.billing === "Yearly" ? sub.price : sub.price * 12;
+      const annual = sub.billing === "Yearly" ? sub.price : sub.price * 12;
       return sum + annual;
     }, 0);
   }, [subscriptions]);
@@ -85,7 +86,10 @@ const Insights = () => {
     const map = new Map<string, number>();
     for (const sub of subscriptions) {
       const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
-      map.set(sub.category ?? "Other", (map.get(sub.category ?? "Other") ?? 0) + monthly);
+      map.set(
+        sub.category ?? "Other",
+        (map.get(sub.category ?? "Other") ?? 0) + monthly,
+      );
     }
     const max = Math.max(...map.values(), 1);
     return Array.from(map.entries())
@@ -109,7 +113,8 @@ const Insights = () => {
         return bMonthly - aMonthly;
       })
       .map((sub) => {
-        const monthlyCost = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+        const monthlyCost =
+          sub.billing === "Yearly" ? sub.price / 12 : sub.price;
         return {
           ...sub,
           monthlyCost,
@@ -135,7 +140,11 @@ const Insights = () => {
     }
     return {
       monthly: { count: monthlyCount, total: monthlyCost },
-      yearly: { count: yearlyCount, total: yearlyCost, monthlyEquiv: yearlyCost / 12 },
+      yearly: {
+        count: yearlyCount,
+        total: yearlyCost,
+        monthlyEquiv: yearlyCost / 12,
+      },
     };
   }, [subscriptions]);
 
@@ -183,7 +192,16 @@ const Insights = () => {
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-3xl font-sans-bold text-primary">Insights</Text>
 
-          <View className="flex-row rounded-full bg-white p-0.5">
+          <View
+            className="flex-row rounded-full bg-white p-0.5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Pressable
               onPress={() => handlePeriodChange("monthly")}
               className={clsx(
@@ -242,7 +260,16 @@ const Insights = () => {
 
         {/* Stats Row */}
         <View className="mb-8 flex-row gap-3">
-          <View className="flex-1 items-center rounded-2xl bg-white p-4">
+          <View
+            className="flex-1 items-center rounded-2xl bg-white p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Yearly
             </Text>
@@ -250,7 +277,16 @@ const Insights = () => {
               {formatCurrency(yearlyTotal)}
             </Text>
           </View>
-          <View className="flex-1 items-center rounded-2xl bg-white p-4">
+          <View
+            className="flex-1 items-center rounded-2xl bg-white p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Active
             </Text>
@@ -258,11 +294,23 @@ const Insights = () => {
               {activeSubCount}
             </Text>
           </View>
-          <View className="flex-1 items-center rounded-2xl bg-white p-4">
+          <View
+            className="flex-1 items-center rounded-2xl bg-white p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Top Category
             </Text>
-            <Text className="mt-1 text-lg font-sans-bold text-primary" numberOfLines={1}>
+            <Text
+              className="mt-1 text-lg font-sans-bold text-primary"
+              numberOfLines={1}
+            >
               {categoryBreakdown[0]?.category ?? "—"}
             </Text>
           </View>
@@ -274,7 +322,8 @@ const Insights = () => {
         </Text>
         <View className="mb-8 gap-4">
           {categoryBreakdown.map((cat) => {
-            const displayCost = period === "monthly" ? cat.total : cat.yearlyTotal;
+            const displayCost =
+              period === "monthly" ? cat.total : cat.yearlyTotal;
             return (
               <View key={cat.category}>
                 <View className="mb-2 flex-row items-center justify-between">
@@ -326,9 +375,17 @@ const Insights = () => {
                       #{i + 1}
                     </Text>
                     {sub.domain ? (
-                      <Image source={getLogoUrl(sub.domain, 128)} style={{ width: 32, height: 32, borderRadius: 8 }} contentFit="cover" />
+                      <Image
+                        source={getLogoUrl(sub.domain, 128)}
+                        style={{ width: 32, height: 32, borderRadius: 8 }}
+                        contentFit="cover"
+                      />
                     ) : (
-                      <Image source={sub.icon} style={{ width: 32, height: 32, borderRadius: 8 }} contentFit="cover" />
+                      <Image
+                        source={sub.icon}
+                        style={{ width: 32, height: 32, borderRadius: 8 }}
+                        contentFit="cover"
+                      />
                     )}
                     <Text className="text-base font-sans-semibold text-primary">
                       {sub.name}
@@ -357,7 +414,16 @@ const Insights = () => {
           Billing Overview
         </Text>
         <View className="mb-8 flex-row gap-3">
-          <View className="flex-1 rounded-2xl bg-white p-4">
+          <View
+            className="flex-1 rounded-2xl bg-white p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="repeat-outline" size={16} color="#2f6fed" />
               <Text className="text-xs font-sans-semibold text-muted-foreground">
@@ -377,7 +443,16 @@ const Insights = () => {
               </Text>
             </Text>
           </View>
-          <View className="flex-1 rounded-2xl bg-white p-4">
+          <View
+            className="flex-1 rounded-2xl bg-white p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="calendar-outline" size={16} color="#0f7b6c" />
               <Text className="text-xs font-sans-semibold text-muted-foreground">
@@ -404,7 +479,16 @@ const Insights = () => {
 
         {/* Smart Insight */}
         {smartInsight && (
-          <View className="mb-6 flex-row gap-3 rounded-2xl bg-white p-5">
+          <View
+            className="mb-6 flex-row gap-3 rounded-2xl bg-white p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <View className="mt-0.5 h-5 w-1 rounded-full bg-accent" />
             <View className="flex-1">
               <Text className="text-xs font-sans-semibold uppercase tracking-wider text-accent mb-2">

@@ -1,17 +1,32 @@
-import React from "react";
-import { View, Text, Pressable } from "react-native";
-import { Image } from "expo-image";
+import { getLogoUrl } from "@/lib/logo";
 import {
   formatCurrency,
-  formatStatusLabel,
-  formatSubscriptionDateTime,
+  formatSubscriptionDateLong,
+  getDaysUntilRenewal,
+  getMonthsActive,
+  getSmartStatusLabel,
 } from "@/lib/utils";
-import { getLogoUrl } from "@/lib/logo";
+import { Ionicons } from "@expo/vector-icons";
+import { clsx } from "clsx";
+import { Image } from "expo-image";
+import React, { useEffect } from "react";
+import { Pressable, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
-const STATUS_COLORS: Record<string, string> = {
-  active: "#16a34a",
-  paused: "#d97706",
-  cancelled: "#dc2626",
+const DETAIL_ICONS = {
+  payment: "card-outline" as const,
+  plan: "star-outline" as const,
+  started: "calendar-outline" as const,
+  renewal: "refresh-outline" as const,
+  monthlyEquiv: "pricetag-outline" as const,
+  totalSpent: "wallet-outline" as const,
+  monthsActive: "time-outline" as const,
+  avgCost: "trending-down-outline" as const,
 };
 
 const SubscriptionCard = ({
@@ -26,122 +41,294 @@ const SubscriptionCard = ({
   renewalDate,
   expanded,
   onPress,
+  onEditPress,
+  onCancelPress,
   paymentMethod,
   startDate,
   status,
   domain,
 }: SubscriptionCardProps) => {
-  const statusColor = STATUS_COLORS[status ?? "active"] ?? "#16a34a";
+  const cardColor = color ?? "#2f6fed";
+  const smartStatus = getSmartStatusLabel(status, renewalDate);
+  const monthsActive = getMonthsActive(startDate);
+  const daysUntilRenewal = getDaysUntilRenewal(renewalDate);
+  const totalSpent = monthsActive > 0 ? price * monthsActive : price;
+  const monthlyEquiv = billing === "Yearly" ? price / 12 : price;
+
   const displayMeta = category?.trim() || plan?.trim() || "";
 
-  const imageSource = domain
-    ? { uri: getLogoUrl(domain, 128) }
-    : icon;
+  const imageSource = domain ? { uri: getLogoUrl(domain, 128) } : icon;
+
+  // Simple expand animation
+  const expandAnim = useSharedValue(0);
+
+  useEffect(() => {
+    expandAnim.value = withTiming(expanded ? 1 : 0, {
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [expanded, expandAnim]);
+
+  const detailsStyle = useAnimatedStyle(() => ({
+    opacity: expandAnim.value,
+  }));
+
+  // Status pill
+  const statusPillClass = clsx(
+    "sub-status-pill",
+    smartStatus.urgency === "danger" && status !== "cancelled"
+      ? "bg-destructive/10"
+      : smartStatus.urgency === "warning"
+        ? "sub-status-paused"
+        : status === "cancelled"
+          ? "sub-status-cancelled"
+          : "sub-status-active",
+  );
+
+  const statusTextClass = clsx(
+    "sub-status-text",
+    smartStatus.urgency === "danger" && status !== "cancelled"
+      ? "text-destructive"
+      : smartStatus.urgency === "warning"
+        ? "sub-status-paused-text"
+        : status === "cancelled"
+          ? "sub-status-cancelled-text"
+          : "sub-status-active-text",
+  );
 
   return (
     <Pressable
       onPress={onPress}
-      className="overflow-hidden rounded-2xl"
+      className="sub-card"
       style={{
-        backgroundColor: "#fff",
-        borderWidth: 1,
-        borderColor: expanded ? "rgba(47, 111, 237, 0.3)" : "rgba(55, 53, 47, 0.12)",
-        borderLeftWidth: expanded ? 3 : 1,
-        borderLeftColor: expanded ? (color ?? "#2f6fed") : "rgba(55, 53, 47, 0.12)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        elevation: 0.5,
       }}
     >
-      {/* Main Row */}
-      <View className="flex-row items-center p-4">
-        {/* Icon */}
+      {/* Collapsed Row */}
+      <View className="sub-card-inner">
+        {/* Icon with color ring */}
         <View
-          className="size-12 items-center justify-center rounded-xl overflow-hidden"
+          className="sub-icon-ring"
+          style={{ backgroundColor: `${cardColor}15` }}
         >
-          <Image
-            source={imageSource}
-            style={{ width: "100%", height: "100%", borderRadius: 8 }}
-            contentFit="cover"
-          />
+          <View className="sub-icon-bg">
+            <Image
+              source={imageSource}
+              style={{ width: "100%", height: "100%", borderRadius: 10 }}
+              contentFit="cover"
+            />
+          </View>
         </View>
 
-        {/* Copy */}
+        {/* Name + Meta */}
         <View className="ml-3 min-w-0 flex-1">
-          <Text
-            numberOfLines={1}
-            className="text-base font-sans-bold text-primary"
-          >
+          <Text numberOfLines={1} className="sub-name">
             {name}
           </Text>
-          {displayMeta ? (
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              className="mt-0.5 text-sm font-sans-medium text-muted-foreground"
-            >
-              {displayMeta}
-              {billing ? ` · ${billing}` : ""}
-            </Text>
-          ) : billing ? (
-            <Text className="mt-0.5 text-sm font-sans-medium text-muted-foreground">
-              {billing}
-            </Text>
+          {displayMeta || billing ? (
+            <View className="sub-meta-row">
+              {displayMeta ? (
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  className="sub-meta-text"
+                >
+                  {displayMeta}
+                  {billing ? ` · ${billing}` : ""}
+                </Text>
+              ) : (
+                <Text className="sub-meta-text">{billing}</Text>
+              )}
+            </View>
           ) : null}
         </View>
 
-        {/* Price + Status */}
-        <View className="ml-3 items-end">
-          <Text className="text-base font-sans-bold text-primary">
+        {/* Price + Status block */}
+        <View className="sub-price-block">
+          <Text className="sub-price">
             {formatCurrency(price, currency)}
-          </Text>
-          <View className="mt-1 flex-row items-center gap-1.5">
-            <View
-              className="size-1.5 rounded-full"
-              style={{ backgroundColor: statusColor }}
-            />
-            <Text className="text-xs font-sans-semibold text-muted-foreground">
-              {formatStatusLabel(status)}
+            <Text className="sub-billing-label">
+              {billing === "Yearly" ? "/yr" : "/mo"}
             </Text>
+          </Text>
+          <View className={statusPillClass}>
+            <Text className={statusTextClass}>{smartStatus.label}</Text>
           </View>
         </View>
       </View>
 
       {/* Expanded Details */}
       {expanded && (
-        <View className="border-t border-border/60 px-4 pb-4 pt-3">
-          <View className="gap-3">
-            {[
-              { label: "Payment", value: paymentMethod },
-              { label: "Category", value: category },
-              { label: "Plan", value: plan },
-              { label: "Started", value: startDate },
-              { label: "Renewal", value: renewalDate },
-              { label: "Status", value: status },
-            ].map(({ label, value }) => {
-              const isDate = label === "Started" || label === "Renewal";
-              const displayValue = isDate
-                ? formatSubscriptionDateTime(value)
-                : value?.trim() || "—";
-              return (
-                <View
-                  key={label}
-                  className="flex-row items-center justify-between"
-                >
-                  <Text className="text-sm font-sans-medium text-muted-foreground">
-                    {label}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    className="ml-4 max-w-[60%] text-right text-sm font-sans-semibold text-primary"
-                  >
-                    {label === "Status"
-                      ? formatStatusLabel(displayValue)
-                      : displayValue}
+        <Animated.View
+          style={detailsStyle}
+          className="border-t border-border/40 px-4 pb-4 pt-3"
+        >
+          <View className="gap-4">
+            {/* BILLING */}
+            <View>
+              <Text className="sub-section-label">Billing</Text>
+              <View className="sub-detail-group">
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.payment}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Payment method</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {paymentMethod?.trim() || "—"}
                   </Text>
                 </View>
-              );
-            })}
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.plan}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Plan</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {plan?.trim() || "—"}
+                  </Text>
+                </View>
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.monthlyEquiv}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Monthly equivalent</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {formatCurrency(monthlyEquiv, currency)}/mo
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* DATES */}
+            <View>
+              <Text className="sub-section-label">Dates</Text>
+              <View className="sub-detail-group">
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.started}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Start date</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {formatSubscriptionDateLong(startDate)}
+                  </Text>
+                </View>
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.renewal}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Next renewal</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {formatSubscriptionDateLong(renewalDate)}
+                  </Text>
+                </View>
+                {daysUntilRenewal !== null && (
+                  <View className="sub-detail-subtext">
+                    <Text
+                      className={clsx(
+                        "text-[11px] font-sans-medium",
+                        daysUntilRenewal < 0
+                          ? "text-destructive font-sans-semibold"
+                          : daysUntilRenewal <= 3
+                            ? "text-destructive"
+                            : daysUntilRenewal <= 7
+                              ? "text-amber-600"
+                              : "text-success",
+                      )}
+                    >
+                      {daysUntilRenewal < 0
+                        ? `Overdue by ${Math.abs(daysUntilRenewal)} days`
+                        : daysUntilRenewal === 0
+                          ? "Renews today"
+                          : `Renews in ${daysUntilRenewal} days`}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* SPENDING */}
+            <View>
+              <Text className="sub-section-label">Spending</Text>
+              <View className="sub-detail-group">
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.totalSpent}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Total spent</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {formatCurrency(totalSpent, currency)}
+                  </Text>
+                </View>
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.monthsActive}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Months active</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {monthsActive > 0
+                      ? `${monthsActive} month${monthsActive !== 1 ? "s" : ""}`
+                      : "Just started"}
+                  </Text>
+                </View>
+                <View className="sub-detail-row">
+                  <Ionicons
+                    name={DETAIL_ICONS.avgCost}
+                    size={18}
+                    className="sub-detail-icon"
+                  />
+                  <Text className="sub-detail-label">Avg cost / month</Text>
+                  <Text numberOfLines={1} className="sub-detail-value">
+                    {formatCurrency(monthlyEquiv, currency)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View className="sub-actions">
+              {onEditPress && (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    onEditPress();
+                  }}
+                  className="sub-action-edit"
+                >
+                  <Ionicons name="pencil-outline" size={16} color="#191919" />
+                  <Text className="sub-action-text">Edit</Text>
+                </Pressable>
+              )}
+              {onCancelPress && (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    onCancelPress();
+                  }}
+                  className="sub-action-delete"
+                >
+                  <Ionicons name="trash-outline" size={16} color="#e03e3e" />
+                  <Text className="sub-action-text-delete">Delete</Text>
+                </Pressable>
+              )}
+            </View>
           </View>
-        </View>
+        </Animated.View>
       )}
     </Pressable>
   );
