@@ -1,10 +1,12 @@
 import React from "react";
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { Image } from "expo-image";
 import {
   formatCurrency,
   formatStatusLabel,
   formatSubscriptionDateTime,
 } from "@/lib/utils";
+import { getLogoUrl } from "@/lib/logo";
 
 const STATUS_COLORS: Record<string, string> = {
   active: "#16a34a",
@@ -27,9 +29,14 @@ const SubscriptionCard = ({
   paymentMethod,
   startDate,
   status,
+  domain,
 }: SubscriptionCardProps) => {
   const statusColor = STATUS_COLORS[status ?? "active"] ?? "#16a34a";
   const displayMeta = category?.trim() || plan?.trim() || "";
+
+  const imageSource = domain
+    ? { uri: getLogoUrl(domain, 128) }
+    : icon;
 
   return (
     <Pressable
@@ -47,10 +54,13 @@ const SubscriptionCard = ({
       <View className="flex-row items-center p-4">
         {/* Icon */}
         <View
-          className="size-12 items-center justify-center rounded-xl"
-          style={{ backgroundColor: color ? `${color}22` : "#f7f6f3" }}
+          className="size-12 items-center justify-center rounded-xl overflow-hidden"
         >
-          <Image source={icon} className="size-8" resizeMode="contain" />
+          <Image
+            source={imageSource}
+            style={{ width: "100%", height: "100%", borderRadius: 8 }}
+            contentFit="cover"
+          />
         </View>
 
         {/* Copy */}

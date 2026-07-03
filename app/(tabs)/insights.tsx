@@ -4,12 +4,13 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
 import { formatCurrency } from "@/lib/utils";
+import { getLogoUrl } from "@/lib/logo";
 import { Ionicons } from "@expo/vector-icons";
 import clsx from "clsx";
 
@@ -324,7 +325,11 @@ const Insights = () => {
                     <Text className="w-6 text-base font-sans-bold text-muted-foreground text-center">
                       #{i + 1}
                     </Text>
-                    <Image source={sub.icon} className="size-8 rounded-md" />
+                    {sub.domain ? (
+                      <Image source={getLogoUrl(sub.domain, 128)} style={{ width: 32, height: 32, borderRadius: 8 }} contentFit="cover" />
+                    ) : (
+                      <Image source={sub.icon} style={{ width: 32, height: 32, borderRadius: 8 }} contentFit="cover" />
+                    )}
                     <Text className="text-base font-sans-semibold text-primary">
                       {sub.name}
                     </Text>

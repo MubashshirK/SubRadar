@@ -3,9 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import * as Haptics from "expo-haptics";
-import React, { useEffect, useRef, useState } from "react";
+import { Image } from "expo-image";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,44 +13,64 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
+import {
+  getLogoUrl,
+  searchServices,
+  type ServiceCategory,
+  type ServiceEntry,
+} from "@/lib/logo";
+import DatePicker from "@/components/DatePicker";
 
 type Frequency = "Monthly" | "Yearly";
-type Category =
-  | "Entertainment"
-  | "AI Tools"
-  | "Developer Tools"
-  | "Design"
-  | "Productivity"
-  | "Other";
 
-const CATEGORIES: Category[] = [
+const CATEGORIES: ServiceCategory[] = [
   "Entertainment",
   "AI Tools",
   "Developer Tools",
   "Design",
   "Productivity",
+  "Cloud Storage",
+  "Music",
+  "Video",
+  "News",
+  "Gaming",
+  "Education",
+  "Shopping",
+  "Communication",
+  "Security",
   "Other",
 ];
 
-const CATEGORY_EMOJI: Record<Category, string> = {
-  Entertainment: "🎬",
-  "AI Tools": "🤖",
-  "Developer Tools": "💻",
-  Design: "🎨",
-  Productivity: "📋",
-  Other: "📦",
-};
-
-const CATEGORY_COLORS: Record<Category, string> = {
+const CATEGORY_COLORS: Record<string, string> = {
   Entertainment: "#ff6b6b",
   "AI Tools": "#b8d4e3",
   "Developer Tools": "#e8def8",
   Design: "#f5c542",
   Productivity: "#95e1d3",
+  "Cloud Storage": "#a8d8ea",
+  Music: "#f8b500",
+  Video: "#e03e3e",
+  News: "#6366f1",
+  Gaming: "#10b981",
+  Education: "#8b5cf6",
+  Finance: "#0ea5e9",
+  Shopping: "#f97316",
+  Communication: "#06b6d4",
+  Security: "#ec4899",
   Other: "#d4d4d4",
 };
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
 
 interface CreateSubscriptionModalProps {
   visible: boolean;
@@ -66,39 +86,48 @@ const CreateSubscriptionModal = ({
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("Monthly");
-  const [category, setCategory] = useState<Category>("Other");
+  const [category, setCategory] = useState<ServiceCategory>("Other");
+  const [domain, setDomain] = useState("");
+  const [customDomain, setCustomDomain] = useState("");
+  const [showCustomDomain, setShowCustomDomain] = useState(false);
+  const [suggestions, setSuggestions] = useState<ServiceEntry[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [plan, setPlan] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [startDateStr, setStartDateStr] = useState(dayjs().format("MM/DD/YYYY"));
+  const [manualRenewalStr, setManualRenewalStr] = useState("");
+  const [renewalManuallyEdited, setRenewalManuallyEdited] = useState(false);
   const nameInputRef = useRef<TextInput>(null);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", () =>
-      setKeyboardVisible(true),
-    );
-    const hideSub = Keyboard.addListener("keyboardDidHide", () =>
-      setKeyboardVisible(false),
-    );
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showRenewalDatePicker, setShowRenewalDatePicker] = useState(false);
+
+  const { height: screenHeight } = useWindowDimensions();
+  const cardMaxHeight = screenHeight * 0.88;
 
   const isValidForm = name.trim() !== "" && parseFloat(price) > 0;
 
-  const monthlyCost = isValidForm
-    ? frequency === "Monthly"
-      ? parseFloat(price)
-      : parseFloat(price) / 12
-    : 0;
+  const effectiveDomain = domain || customDomain;
 
-  const costLabel =
-    price && parseFloat(price) > 0
-      ? ` — ${new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-          minimumFractionDigits: 2,
-        }).format(monthlyCost)}/${frequency === "Monthly" ? "month" : "year"}`
-      : "";
+  const priceValue = isValidForm ? parseFloat(price) : 0;
+
+  const displayCostLabel = useMemo(() => {
+    if (!isValidForm) return "";
+    return ` — ${formatCurrency(priceValue)}/${frequency === "Monthly" ? "mo" : "yr"}`;
+  }, [isValidForm, priceValue, frequency]);
+
+  const calculatedRenewal = useMemo(() => {
+    const parsed = dayjs(startDateStr, "MM/DD/YYYY", true);
+    if (!parsed.isValid()) return "";
+    const added =
+      frequency === "Monthly" ? parsed.add(1, "month") : parsed.add(1, "year");
+    return added.format("MM/DD/YYYY");
+  }, [startDateStr, frequency]);
+
+  const renewalDateStr = renewalManuallyEdited
+    ? manualRenewalStr
+    : calculatedRenewal;
 
   useEffect(() => {
     if (visible) {
@@ -112,6 +141,19 @@ const CreateSubscriptionModal = ({
     setPrice("");
     setFrequency("Monthly");
     setCategory("Other");
+    setDomain("");
+    setCustomDomain("");
+    setShowCustomDomain(false);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setShowDetails(false);
+    setPlan("");
+    setPaymentMethod("");
+    setStartDateStr(dayjs().format("MM/DD/YYYY"));
+    setManualRenewalStr("");
+    setRenewalManuallyEdited(false);
+    setShowStartDatePicker(false);
+    setShowRenewalDatePicker(false);
   };
 
   const handleClose = () => {
@@ -119,29 +161,79 @@ const CreateSubscriptionModal = ({
     onClose();
   };
 
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (showDetails) setShowDetails(false);
+    if (text.trim().length > 0) {
+      const results = searchServices(text);
+      setSuggestions(results);
+      setShowSuggestions(results.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectService = (service: ServiceEntry) => {
+    setName(service.name);
+    setDomain(service.domain);
+    setCategory(service.category);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setShowCustomDomain(false);
+    setCustomDomain("");
+  };
+
+  const handleShowCustomDomain = () => {
+    setShowCustomDomain(true);
+    setDomain("");
+    setShowSuggestions(false);
+  };
+
   const handleSubmit = () => {
     if (!isValidForm) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const priceValue = parseFloat(price);
-    const now = dayjs();
-    const renewalDate =
-      frequency === "Monthly" ? now.add(1, "month") : now.add(1, "year");
+    const priceVal = parseFloat(price);
+    const startParsed = dayjs(startDateStr, "MM/DD/YYYY", true);
+    const finalStartDate = startParsed.isValid() ? startParsed : dayjs();
+
+    const renewalParsed = dayjs(renewalDateStr, "MM/DD/YYYY", true);
+    const finalRenewalDate = renewalParsed.isValid()
+      ? renewalParsed
+      : frequency === "Monthly"
+        ? finalStartDate.add(1, "month")
+        : finalStartDate.add(1, "year");
+
+    let finalDomain = effectiveDomain;
+    let finalCategory = category;
+    if (!finalDomain) {
+      const match = searchServices(name);
+      if (match.length > 0) {
+        finalDomain = match[0].domain;
+        if (!finalCategory || finalCategory === "Other") {
+          finalCategory = match[0].category;
+        }
+      }
+    }
 
     const newSubscription: Subscription = {
       id: `sub-${Date.now()}`,
       name: name.trim(),
-      price: priceValue,
+      price: priceVal,
       currency: "USD",
       frequency,
-      category,
+      category: finalCategory,
       status: "active",
-      startDate: now.toISOString(),
-      renewalDate: renewalDate.toISOString(),
+      startDate: finalStartDate.toISOString(),
+      renewalDate: finalRenewalDate.toISOString(),
       icon: icons.plus,
       billing: frequency,
-      color: CATEGORY_COLORS[category],
+      color: CATEGORY_COLORS[finalCategory] ?? CATEGORY_COLORS.Other,
+      domain: finalDomain,
+      plan: plan.trim() || undefined,
+      paymentMethod: paymentMethod.trim() || undefined,
     };
 
     onSubmit(newSubscription);
@@ -158,24 +250,32 @@ const CreateSubscriptionModal = ({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
-        <Pressable
-          className="flex-1 justify-end"
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-          onPress={handleClose}
-        >
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <Pressable
-            className="rounded-t-3xl bg-white pt-2 pb-8"
             style={{
-              maxHeight: "88%",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.6)",
+            }}
+            onPress={handleClose}
+          />
+          <View
+            style={{
+              maxHeight: cardMaxHeight,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              backgroundColor: "#fff",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -4 },
               shadowOpacity: 0.15,
               shadowRadius: 24,
               elevation: 20,
             }}
-            onPress={(e) => e.stopPropagation()}
           >
             {/* Drag Handle */}
             <View className="w-9 h-1 rounded-full bg-black/10 self-center mt-2 mb-4" />
@@ -193,31 +293,150 @@ const CreateSubscriptionModal = ({
               </Pressable>
             </View>
 
-            {/* Content */}
+            {/* Scrollable Content */}
             <ScrollView
-              className="px-6 pt-6"
+              style={{ flexGrow: 0, flexShrink: 1 }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                gap: 16,
-                paddingBottom: keyboardVisible ? 40 : 0,
-              }}
+              keyboardDismissMode="on-drag"
+              contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, gap: 16 }}
             >
-              {/* Name */}
+              {/* Service Name */}
               <View>
                 <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Name
+                  Service Name
                 </Text>
-                <TextInput
-                  ref={nameInputRef}
-                  className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
-                  style={{ paddingHorizontal: 16 }}
-                  placeholder="e.g. Netflix"
-                  placeholderTextColor="rgba(55, 53, 47, 0.35)"
-                  value={name}
-                  onChangeText={setName}
-                />
+                <View className="relative">
+                  <TextInput
+                    ref={nameInputRef}
+                    className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
+                    style={{ paddingHorizontal: 16 }}
+                    placeholder="e.g. Netflix, Spotify, GitHub"
+                    placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                    value={name}
+                    onChangeText={handleNameChange}
+                    onFocus={() => {
+                      if (showDetails) setShowDetails(false);
+                      if (suggestions.length > 0) setShowSuggestions(true);
+                    }}
+                  />
+
+                  {/* Autocomplete Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <View
+                      className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white"
+                      style={{
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 12,
+                        elevation: 8,
+                      }}
+                    >
+                      {suggestions.map((service) => (
+                        <Pressable
+                          key={service.domain}
+                          onPress={() => handleSelectService(service)}
+                          className="flex-row items-center gap-3 px-4 py-3 border-b border-border/30 last:border-b-0"
+                        >
+                          <Image
+                            source={{ uri: getLogoUrl(service.domain, 64) }}
+                            className="size-8 rounded-md"
+                            contentFit="contain"
+                          />
+                          <View className="flex-1">
+                            <Text className="text-sm font-sans-semibold text-primary">
+                              {service.name}
+                            </Text>
+                            <Text className="text-xs font-sans-medium text-muted-foreground">
+                              {service.domain}
+                            </Text>
+                          </View>
+                          <View
+                            className="rounded-full px-2 py-0.5"
+                            style={{
+                              backgroundColor:
+                                CATEGORY_COLORS[service.category] + "20",
+                            }}
+                          >
+                            <Text
+                              className="text-[10px] font-sans-semibold"
+                              style={{
+                                color: CATEGORY_COLORS[service.category],
+                              }}
+                            >
+                              {service.category}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      ))}
+
+                      {/* Custom Domain Option */}
+                      <Pressable
+                        onPress={handleShowCustomDomain}
+                        className="flex-row items-center gap-3 px-4 py-3 bg-muted/50"
+                      >
+                        <View className="size-8 items-center justify-center rounded-md bg-muted">
+                          <Ionicons
+                            name="globe-outline"
+                            size={16}
+                            color="#999"
+                          />
+                        </View>
+                        <Text className="text-sm font-sans-medium text-muted-foreground">
+                          Enter custom domain...
+                        </Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
               </View>
+
+              {/* Custom Domain Input */}
+              {showCustomDomain && (
+                <View>
+                  <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Domain
+                  </Text>
+                  <TextInput
+                    className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
+                    style={{ paddingHorizontal: 16 }}
+                    placeholder="e.g. netflix.com"
+                    placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                    value={customDomain}
+                    onChangeText={setCustomDomain}
+                    keyboardType="url"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+              )}
+
+              {/* Selected Domain Display */}
+              {domain && !showCustomDomain && (
+                <View className="flex-row items-center gap-2 bg-muted/50 rounded-xl px-4 py-3">
+                  <Image
+                    source={{ uri: getLogoUrl(domain, 64) }}
+                    className="size-6 rounded"
+                    contentFit="contain"
+                  />
+                  <Text className="text-sm font-sans-medium text-muted-foreground flex-1">
+                    {domain}
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      setDomain("");
+                      setShowCustomDomain(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color="rgba(55, 53, 47, 0.3)"
+                    />
+                  </Pressable>
+                </View>
+              )}
 
               {/* Price */}
               <View>
@@ -236,7 +455,13 @@ const CreateSubscriptionModal = ({
                     placeholder="0.00"
                     placeholderTextColor="rgba(55, 53, 47, 0.35)"
                     value={price}
-                    onChangeText={setPrice}
+                    onChangeText={(t) => {
+                      setPrice(t);
+                      if (showDetails) setShowDetails(false);
+                    }}
+                    onFocus={() => {
+                      if (showDetails) setShowDetails(false);
+                    }}
                     keyboardType="decimal-pad"
                   />
                 </View>
@@ -276,43 +501,158 @@ const CreateSubscriptionModal = ({
                 ))}
               </View>
 
-              {/* Category */}
-              <View>
-                <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                  Category
+              {/* More Details Toggle */}
+              <Pressable
+                onPress={() => setShowDetails(!showDetails)}
+                className="flex-row items-center gap-2 py-1"
+              >
+                <Ionicons
+                  name={showDetails ? "chevron-down" : "chevron-forward"}
+                  size={16}
+                  color="#999"
+                />
+                <Text className="text-sm font-sans-semibold text-muted-foreground">
+                  More details
                 </Text>
-                <View className="flex-row flex-wrap gap-1.5">
-                  {CATEGORIES.map((cat) => (
-                    <Pressable
-                      key={cat}
-                      onPress={() => setCategory(cat)}
-                      className={clsx(
-                        "flex-row items-center gap-1 rounded-xl border px-2.5 py-1.5",
-                        category === cat
-                          ? "border-accent/40 bg-accent/8"
-                          : "border-border bg-card",
-                      )}
-                    >
-                      <Text className="text-sm">{CATEGORY_EMOJI[cat]}</Text>
-                      <Text
-                        className={clsx(
-                          "text-sm font-sans-semibold",
-                          category === cat
-                            ? "text-accent"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        {cat}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
+                {!showDetails && (
+                  <Text className="text-xs font-sans-medium text-muted-foreground/60 ml-1">
+                    (optional)
+                  </Text>
+                )}
+              </Pressable>
 
-              {/* Submit */}
+              {/* Collapsible Details Section */}
+              {showDetails && (
+                <View className="gap-4">
+                  {/* Category */}
+                  <View>
+                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Category
+                    </Text>
+                    <View className="flex-row flex-wrap gap-1.5">
+                      {CATEGORIES.map((cat) => (
+                        <Pressable
+                          key={cat}
+                          onPress={() => setCategory(cat)}
+                          className={clsx(
+                            "flex-row items-center gap-1 rounded-xl border px-2.5 py-1.5",
+                            category === cat
+                              ? "border-accent/40 bg-accent/8"
+                              : "border-border bg-card",
+                          )}
+                        >
+                          <Text
+                            className={clsx(
+                              "text-sm font-sans-semibold",
+                              category === cat
+                                ? "text-accent"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {cat}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Plan */}
+                  <View>
+                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Plan
+                    </Text>
+                    <TextInput
+                      className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
+                      style={{ paddingHorizontal: 16 }}
+                      placeholder="e.g. Pro Plan, Teams Plan"
+                      placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                      value={plan}
+                      onChangeText={setPlan}
+                    />
+                  </View>
+
+                  {/* Payment Method */}
+                  <View>
+                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Payment Method
+                    </Text>
+                    <TextInput
+                      className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
+                      style={{ paddingHorizontal: 16 }}
+                      placeholder="e.g. Visa ending in 8530"
+                      placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                      value={paymentMethod}
+                      onChangeText={setPaymentMethod}
+                    />
+                  </View>
+
+                  {/* Start Date */}
+                  <View>
+                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Start Date
+                    </Text>
+                    <Pressable
+                      onPress={() => setShowStartDatePicker(true)}
+                      className="flex-row items-center justify-between bg-muted rounded-xl px-4 py-3.5"
+                    >
+                      <Text className="text-base font-sans-medium text-primary">
+                        {startDateStr}
+                      </Text>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={18}
+                        color="rgba(55, 53, 47, 0.4)"
+                      />
+                    </Pressable>
+                  </View>
+
+                  {/* Renewal Date */}
+                  <View>
+                    <View className="flex-row items-center justify-between mb-2">
+                      <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground">
+                        Renewal Date
+                      </Text>
+                      {renewalManuallyEdited && (
+                        <Pressable
+                          onPress={() => {
+                            setManualRenewalStr("");
+                            setRenewalManuallyEdited(false);
+                          }}
+                        >
+                          <Text className="text-xs font-sans-semibold text-primary">
+                            Reset to auto
+                          </Text>
+                        </Pressable>
+                      )}
+                    </View>
+                    <Pressable
+                      onPress={() => setShowRenewalDatePicker(true)}
+                      className="flex-row items-center justify-between bg-muted rounded-xl px-4 py-3.5"
+                    >
+                      <Text className="text-base font-sans-medium text-primary">
+                        {renewalDateStr || "—"}
+                      </Text>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={18}
+                        color="rgba(55, 53, 47, 0.4)"
+                      />
+                    </Pressable>
+                    <Text className="mt-1 text-xs font-sans-medium text-muted-foreground/60">
+                      {renewalManuallyEdited
+                        ? "Custom renewal date"
+                        : `Auto: start date + ${frequency.toLowerCase()} billing`}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Fixed Footer - Create Button */}
+            <View style={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12 }}>
               <Pressable
                 className={clsx(
-                  "mt-2 flex-row items-center justify-center gap-2 rounded-full bg-primary h-14",
+                  "flex-row items-center justify-center gap-2 rounded-full bg-primary h-14",
                   !isValidForm && "opacity-40",
                 )}
                 onPress={handleSubmit}
@@ -320,13 +660,40 @@ const CreateSubscriptionModal = ({
               >
                 <Ionicons name="add" size={20} color="#fff" />
                 <Text className="text-base font-sans-bold text-white">
-                  Create{costLabel}
+                  Create{displayCostLabel}
                 </Text>
               </Pressable>
-            </ScrollView>
-          </Pressable>
-        </Pressable>
+            </View>
+          </View>
+        </View>
       </KeyboardAvoidingView>
+
+      {/* Start Date Picker */}
+      <DatePicker
+        visible={showStartDatePicker}
+        value={startDateStr}
+        title="Start Date"
+        onConfirm={(dateStr) => {
+          setStartDateStr(dateStr);
+          setRenewalManuallyEdited(false);
+          setShowStartDatePicker(false);
+        }}
+        onCancel={() => setShowStartDatePicker(false)}
+      />
+
+      {/* Renewal Date Picker */}
+      <DatePicker
+        visible={showRenewalDatePicker}
+        value={renewalDateStr || startDateStr}
+        title="Renewal Date"
+        minDate={startDateStr}
+        onConfirm={(dateStr) => {
+          setManualRenewalStr(dateStr);
+          setRenewalManuallyEdited(true);
+          setShowRenewalDatePicker(false);
+        }}
+        onCancel={() => setShowRenewalDatePicker(false)}
+      />
     </Modal>
   );
 };

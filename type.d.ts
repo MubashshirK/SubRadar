@@ -27,6 +27,7 @@ declare global {
     frequency?: string;
     renewalDate?: string;
     color?: string;
+    domain?: string;
   }
 
   interface SubscriptionCardProps extends Omit<Subscription, "id"> {
@@ -44,6 +45,7 @@ declare global {
     currency?: string;
     daysLeft: number;
     color?: string;
+    domain?: string;
   }
 
   interface ListHeadingProps {

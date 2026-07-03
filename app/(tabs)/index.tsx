@@ -46,6 +46,7 @@ export default function App() {
         currency: sub.currency,
         daysLeft: dayjs(sub.renewalDate!).diff(now, "day"),
         color: sub.color,
+        domain: sub.domain,
       }));
   }, [subscriptions]);
 

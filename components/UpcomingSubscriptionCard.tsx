@@ -1,6 +1,8 @@
 import { formatCurrency } from "@/lib/utils";
+import { getLogoUrl } from "@/lib/logo";
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { Image } from "expo-image";
 
 const UpcomingSubscriptionCard = ({
   name,
@@ -9,6 +11,7 @@ const UpcomingSubscriptionCard = ({
   icon,
   currency,
   color,
+  domain,
 }: UpcomingSubscription) => {
   return (
     <View
@@ -21,10 +24,17 @@ const UpcomingSubscriptionCard = ({
     >
       <View className="flex-row items-start justify-between">
         <View
-          className="size-10 items-center justify-center rounded-xl"
-          style={{ backgroundColor: color ? `${color}22` : "#f7f6f3" }}
+          className="size-10 items-center justify-center rounded-xl overflow-hidden"
         >
-          <Image source={icon} className="size-6" resizeMode="contain" />
+          {domain ? (
+            <Image
+              source={getLogoUrl(domain, 128)}
+              style={{ width: "100%", height: "100%", borderRadius: 8 }}
+              contentFit="cover"
+            />
+          ) : (
+            <Image source={icon} style={{ width: "100%", height: "100%", borderRadius: 8 }} contentFit="cover" />
+          )}
         </View>
         <Text className="text-sm font-sans-bold text-primary">
           {formatCurrency(price, currency)}

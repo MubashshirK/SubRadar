@@ -25,6 +25,7 @@ export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [
     currency: "USD",
     daysLeft: 2,
     color: "#b8d4e3",
+    domain: "spotify.com",
   },
   {
     id: "notion",
@@ -34,6 +35,7 @@ export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [
     currency: "USD",
     daysLeft: 4,
     color: "#e8def8",
+    domain: "notion.so",
   },
   {
     id: "figma",
@@ -43,6 +45,7 @@ export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [
     currency: "USD",
     daysLeft: 6,
     color: "#b8e8d0",
+    domain: "figma.com",
   },
 ];
 
@@ -61,6 +64,7 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     billing: "Monthly",
     renewalDate: "2026-07-05T10:00:00.000Z",
     color: "#f5c542",
+    domain: "adobe.com",
   },
   {
     id: "github-pro",
@@ -76,6 +80,7 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     billing: "Monthly",
     renewalDate: "2026-07-08T10:00:00.000Z",
     color: "#e8def8",
+    domain: "github.com",
   },
   {
     id: "claude-pro",
@@ -91,6 +96,7 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     billing: "Monthly",
     renewalDate: "2026-07-04T10:00:00.000Z",
     color: "#b8d4e3",
+    domain: "claude.ai",
   },
   {
     id: "canva-pro",
@@ -106,5 +112,6 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
     billing: "Yearly",
     renewalDate: "2026-07-07T10:00:00.000Z",
     color: "#b8e8d0",
+    domain: "canva.com",
   },
 ];
