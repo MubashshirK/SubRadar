@@ -10,6 +10,7 @@ import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/lib/useThemeSync";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -21,6 +22,7 @@ const Subscriptions = () => {
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
   const currency = useSettingsStore((s) => s.currency);
+  const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -95,9 +97,9 @@ const Subscriptions = () => {
               </Text>
               <Pressable
                 onPress={() => setIsModalVisible(true)}
-                className="size-10 items-center justify-center rounded-full bg-primary"
+                className="size-10 items-center justify-center rounded-full bg-muted"
               >
-                <Ionicons name="add" size={20} color="#fff" />
+                <Ionicons name="add" size={20} color={isDark ? "#ededed" : "#191919"} />
               </Pressable>
             </View>
 
@@ -108,16 +110,16 @@ const Subscriptions = () => {
             </Text>
 
             {/* Search */}
-            <View className="mb-4 flex-row items-center rounded-xl bg-white px-4 py-3">
+            <View className="mb-4 flex-row items-center rounded-xl bg-muted px-4 py-3">
               <Ionicons
                 name="search-outline"
                 size={18}
-                color="rgba(55, 53, 47, 0.4)"
+                color={isDark ? "rgba(237, 237, 237, 0.4)" : "rgba(55, 53, 47, 0.4)"}
               />
               <TextInput
                 className="ml-2.5 flex-1 bg-transparent text-base font-sans-medium text-primary"
                 placeholder="Search subscriptions..."
-                placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -126,7 +128,7 @@ const Subscriptions = () => {
                   <Ionicons
                     name="close-circle"
                     size={18}
-                    color="rgba(55, 53, 47, 0.3)"
+                    color={isDark ? "rgba(237, 237, 237, 0.3)" : "rgba(55, 53, 47, 0.3)"}
                   />
                 </Pressable>
               )}
@@ -146,15 +148,15 @@ const Subscriptions = () => {
                   className={clsx(
                     "rounded-full border px-4 py-2",
                     activeCategory === item
-                      ? "border-primary bg-primary"
-                      : "border-border bg-card",
+                      ? "border-primary dark:border-foreground bg-primary dark:bg-foreground"
+                      : "border-border bg-card dark:bg-[#1a1a1a]",
                   )}
                 >
                   <Text
                     className={clsx(
                       "text-sm font-sans-semibold",
                       activeCategory === item
-                        ? "text-white"
+                        ? "text-white dark:text-background"
                         : "text-muted-foreground",
                     )}
                   >

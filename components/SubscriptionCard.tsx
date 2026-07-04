@@ -20,6 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { getExchangeRates } from "@/lib/currency";
 import { useSettingsStore } from "@/lib/settingsStore";
+import { useTheme } from "@/lib/useThemeSync";
 
 const DETAIL_ICONS = {
   payment: "card-outline" as const,
@@ -52,6 +53,7 @@ const SubscriptionCard = ({
   domain,
 }: SubscriptionCardProps) => {
   const displayCurrency = useSettingsStore((s) => s.currency);
+  const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
   const cardColor = color ?? "#2f6fed";
   const smartStatus = getSmartStatusLabel(status, renewalDate);
@@ -323,7 +325,7 @@ const SubscriptionCard = ({
                   }}
                   className="sub-action-edit"
                 >
-                  <Ionicons name="pencil-outline" size={16} color="#191919" />
+                  <Ionicons name="pencil-outline" size={16} color={isDark ? "#ededed" : "#191919"} />
                   <Text className="sub-action-text">Edit</Text>
                 </Pressable>
               )}

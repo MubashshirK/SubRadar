@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTheme } from "@/lib/useThemeSync";
 
 type SheetProps = {
   visible: boolean;
@@ -23,6 +24,7 @@ export default function Sheet({
   title,
   children,
 }: SheetProps) {
+  const { isDark } = useTheme();
   return (
     <Modal
       visible={visible}
@@ -39,7 +41,7 @@ export default function Sheet({
 
         {/* Sheet */}
         <View
-          className="max-h-[85%] rounded-t-3xl bg-white pb-8"
+          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-[#1a1a1a] pb-8"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: -4 },
@@ -50,19 +52,19 @@ export default function Sheet({
         >
           {/* Drag handle */}
           <View className="items-center pt-3">
-            <View className="h-1 w-10 rounded-full bg-[#d9d9d9]" />
+            <View className="h-1 w-10 rounded-full bg-muted" />
           </View>
 
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-[#f0f0f0] px-6 py-4">
+          <View className="flex-row items-center justify-between border-b border-border px-6 py-4">
             <Text className="text-[17px] font-sans-bold text-primary">
               {title}
             </Text>
             <Pressable
               onPress={onClose}
-              className="size-8 items-center justify-center rounded-full bg-[#f0f0f0]"
+              className="size-8 items-center justify-center rounded-full bg-black/10 dark:bg-white/15"
             >
-              <Ionicons name="close" size={16} color="#666" />
+              <Ionicons name="close" size={16} color={isDark ? "#888" : "#666"} />
             </Pressable>
           </View>
 

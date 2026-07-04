@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import Sheet from "./Sheet";
+import { useTheme } from "@/lib/useThemeSync";
 
 const CODE_LENGTH = 6;
 
@@ -18,6 +19,7 @@ type Props = {
 
 export default function ChangeEmailSheet({ visible, onClose }: Props) {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const codeInputRef = React.useRef<TextInput>(null);
 
   const [step, setStep] = React.useState<"email" | "verify">("email");
@@ -136,7 +138,7 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
         <>
           {/* Current email */}
           {currentEmail ? (
-            <View className="mb-5 rounded-xl bg-[#f8f8f8] px-4 py-3">
+            <View className="mb-5 rounded-xl bg-muted px-4 py-3">
               <Text className="text-[12px] font-sans-medium text-muted-foreground">
                 Current email
               </Text>
@@ -152,8 +154,8 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
               New email address
             </Text>
             <TextInput
-              className="rounded-xl border border-[#e5e5e5] bg-white pl-4 pr-11 py-3.5 text-[15px] font-sans-medium text-primary"
-              placeholderTextColor="rgba(55, 53, 47, 0.35)"
+              className="rounded-xl border border-input bg-background pl-4 pr-11 py-3.5 text-[15px] font-sans-medium text-primary"
+              placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
               value={newEmail}
               onChangeText={setNewEmail}
               placeholder="you@example.com"
@@ -175,14 +177,14 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
 
           {/* Send code button */}
           <Pressable
-            className={`mt-2 items-center rounded-full bg-primary py-4 ${loading ? "opacity-60" : ""}`}
+            className={`mt-2 items-center rounded-full bg-primary dark:bg-foreground py-4 ${loading ? "opacity-60" : ""}`}
             onPress={handleSendCode}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-[15px] font-sans-bold text-white">
+              <Text className="text-[15px] font-sans-bold text-white dark:text-background">
                 Send verification code
               </Text>
             )}
@@ -208,9 +210,9 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
                     code[i]
                       ? "border-primary bg-primary/5"
                       : code.length === i && code.length < CODE_LENGTH
-                        ? "border-primary/40 border-[#e5e5e5]"
-                        : "border-[#e5e5e5]"
-                  } bg-white`}
+                        ? "border-primary/40 border-input"
+                        : "border-input"
+                  } bg-background dark:bg-[#1a1a1a]`}
                 >
                   <Text className="text-xl font-sans-bold text-primary">
                     {code[i] || ""}
@@ -244,14 +246,14 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
 
           {/* Verify button */}
           <Pressable
-            className={`items-center rounded-full bg-primary py-4 ${(!code.trim() || loading) ? "opacity-60" : ""}`}
+            className={`items-center rounded-full bg-primary dark:bg-foreground py-4 ${(!code.trim() || loading) ? "opacity-60" : ""}`}
             onPress={handleVerify}
             disabled={!code.trim() || loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-[15px] font-sans-bold text-white">
+              <Text className="text-[15px] font-sans-bold text-white dark:text-background">
                 Verify email
               </Text>
             )}

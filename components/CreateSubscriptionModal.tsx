@@ -29,7 +29,8 @@ import {
   type ServiceEntry,
 } from "@/lib/logo";
 import DatePicker from "@/components/DatePicker";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useSettingsStore, CURRENCIES } from "@/lib/settingsStore";
+import { useTheme } from "@/lib/useThemeSync";
 
 type Frequency = "Monthly" | "Yearly";
 
@@ -94,6 +95,8 @@ const CreateSubscriptionModal = ({
 }: CreateSubscriptionModalProps) => {
   const isEditing = !!initialSubscription;
   const currency = useSettingsStore((s) => s.currency);
+  const currencySymbol = CURRENCIES.find((c) => c.code === currency)?.symbol || "$";
+  const { isDark } = useTheme();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("Monthly");
@@ -328,7 +331,6 @@ const CreateSubscriptionModal = ({
                 maxHeight: cardMaxHeight,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
-                backgroundColor: "#fff",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: -4 },
                 shadowOpacity: 0.15,
@@ -337,10 +339,10 @@ const CreateSubscriptionModal = ({
               },
               cardAnimatedStyle,
             ]}
-            className="overflow-hidden"
+            className="overflow-hidden bg-background dark:bg-[#1a1a1a]"
           >
             {/* Drag Handle */}
-            <View className="w-9 h-1 rounded-full bg-black/10 self-center mt-2 mb-4" />
+            <View className="w-9 h-1 rounded-full bg-black/10 dark:bg-white/20 self-center mt-2 mb-4" />
 
             {/* Header */}
             <View className="flex-row items-center justify-between px-6 pb-4 border-b border-border/60">
@@ -349,9 +351,9 @@ const CreateSubscriptionModal = ({
               </Text>
               <Pressable
                 onPress={handleClose}
-                className="size-8 items-center justify-center rounded-full bg-[#f0f0f0]"
+                className="size-8 items-center justify-center rounded-full bg-muted"
               >
-                <Ionicons name="close" size={16} color="#666" />
+                <Ionicons name="close" size={16} color={isDark ? "#ccc" : "#666"} />
               </Pressable>
             </View>
 
@@ -374,7 +376,7 @@ const CreateSubscriptionModal = ({
                     className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
                     style={{ paddingHorizontal: 16 }}
                     placeholder="e.g. Netflix, Spotify, GitHub"
-                    placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                    placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                     value={name}
                     onChangeText={handleNameChange}
                     onFocus={() => {
@@ -386,7 +388,7 @@ const CreateSubscriptionModal = ({
                   {/* Autocomplete Dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
                     <View
-                      className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white"
+                      className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white dark:bg-[#1a1a1a]"
                       style={{
                         shadowColor: "#000",
                         shadowOffset: { width: 0, height: 4 },
@@ -442,7 +444,7 @@ const CreateSubscriptionModal = ({
                           <Ionicons
                             name="globe-outline"
                             size={16}
-                            color="#999"
+                  color={isDark ? "#888" : "#999"}
                           />
                         </View>
                         <Text className="text-sm font-sans-medium text-muted-foreground">
@@ -464,7 +466,7 @@ const CreateSubscriptionModal = ({
                     className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
                     style={{ paddingHorizontal: 16 }}
                     placeholder="e.g. netflix.com"
-                    placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                    placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                     value={customDomain}
                     onChangeText={setCustomDomain}
                     keyboardType="url"
@@ -494,7 +496,7 @@ const CreateSubscriptionModal = ({
                     <Ionicons
                       name="close-circle"
                       size={18}
-                      color="rgba(55, 53, 47, 0.3)"
+                      color={isDark ? "rgba(237, 237, 237, 0.3)" : "rgba(55, 53, 47, 0.3)"}
                     />
                   </Pressable>
                 </View>
@@ -510,12 +512,12 @@ const CreateSubscriptionModal = ({
                   style={{ paddingHorizontal: 16 }}
                 >
                   <Text className="text-base font-sans-semibold text-muted-foreground mr-1">
-                    $
+                    {currencySymbol}
                   </Text>
                   <TextInput
                     className="flex-1 bg-transparent text-base font-sans-medium text-primary"
                     placeholder="0.00"
-                    placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                    placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                     value={price}
                     onChangeText={(t) => {
                       setPrice(t);
@@ -538,7 +540,7 @@ const CreateSubscriptionModal = ({
                     className={clsx(
                       "flex-1 flex-row items-center justify-center gap-2 rounded-full border py-3",
                       frequency === f
-                        ? "border-primary bg-primary"
+                        ? "border-primary bg-primary dark:bg-foreground"
                         : "border-border bg-card",
                     )}
                   >
@@ -547,13 +549,13 @@ const CreateSubscriptionModal = ({
                         f === "Monthly" ? "repeat-outline" : "calendar-outline"
                       }
                       size={14}
-                      color={frequency === f ? "#fff" : "#555"}
+                      color={frequency === f ? (isDark ? "#191919" : "#fff") : "#555"}
                     />
                     <Text
                       className={clsx(
                         "text-sm font-sans-semibold",
                         frequency === f
-                          ? "text-white"
+                          ? "text-white dark:text-background"
                           : "text-muted-foreground",
                       )}
                     >
@@ -627,7 +629,7 @@ const CreateSubscriptionModal = ({
                       className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
                       style={{ paddingHorizontal: 16 }}
                       placeholder="e.g. Pro Plan, Teams Plan"
-                      placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                      placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                       value={plan}
                       onChangeText={setPlan}
                     />
@@ -642,7 +644,7 @@ const CreateSubscriptionModal = ({
                       className="bg-muted rounded-xl py-3.5 text-base font-sans-medium text-primary"
                       style={{ paddingHorizontal: 16 }}
                       placeholder="e.g. Visa ending in 8530"
-                      placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                      placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                       value={paymentMethod}
                       onChangeText={setPaymentMethod}
                     />
@@ -663,7 +665,7 @@ const CreateSubscriptionModal = ({
                       <Ionicons
                         name="calendar-outline"
                         size={18}
-                        color="rgba(55, 53, 47, 0.4)"
+                        color={isDark ? "rgba(237, 237, 237, 0.4)" : "rgba(55, 53, 47, 0.4)"}
                       />
                     </Pressable>
                   </View>
@@ -697,7 +699,7 @@ const CreateSubscriptionModal = ({
                       <Ionicons
                         name="calendar-outline"
                         size={18}
-                        color="rgba(55, 53, 47, 0.4)"
+                        color={isDark ? "rgba(237, 237, 237, 0.4)" : "rgba(55, 53, 47, 0.4)"}
                       />
                     </Pressable>
                     <Text className="mt-1 text-xs font-sans-medium text-muted-foreground/60">
@@ -714,14 +716,14 @@ const CreateSubscriptionModal = ({
             <View style={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12 }}>
               <Pressable
                 className={clsx(
-                  "flex-row items-center justify-center gap-2 rounded-full bg-primary h-14",
+                  "flex-row items-center justify-center gap-2 rounded-full bg-primary dark:bg-foreground h-14",
                   !isValidForm && "opacity-40",
                 )}
                 onPress={handleSubmit}
                 disabled={!isValidForm}
               >
-                <Ionicons name={isEditing ? "checkmark" : "add"} size={20} color="#fff" />
-                <Text className="text-base font-sans-bold text-white">
+                <Ionicons name={isEditing ? "checkmark" : "add"} size={20} color={isDark ? "#191919" : "#fff"} />
+                <Text className="text-base font-sans-bold text-white dark:text-background">
                   {isEditing ? "Save Changes" : `Create${displayCostLabel}`}
                 </Text>
               </Pressable>

@@ -16,6 +16,7 @@ import {
   type CurrencyEntry,
 } from "@/lib/settingsStore";
 import { getExchangeRates } from "@/lib/currency";
+import { useTheme } from "@/lib/useThemeSync";
 
 type CurrencyPickerSheetProps = {
   visible: boolean;
@@ -35,6 +36,7 @@ export default function CurrencyPickerSheet({
   selected,
   onSelect,
 }: CurrencyPickerSheetProps) {
+  const { isDark } = useTheme();
   const [query, setQuery] = useState("");
   const [rates, setRates] = useState<Record<string, number>>({});
 
@@ -94,7 +96,7 @@ export default function CurrencyPickerSheet({
 
         {/* Sheet */}
         <View
-          className="max-h-[85%] rounded-t-3xl bg-white pb-8"
+          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-[#1a1a1a] pb-8"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: -4 },
@@ -105,28 +107,28 @@ export default function CurrencyPickerSheet({
         >
           {/* Drag handle */}
           <View className="items-center pt-3">
-            <View className="h-1 w-10 rounded-full bg-[#d9d9d9]" />
+            <View className="h-1 w-10 rounded-full bg-muted" />
           </View>
 
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-[#f0f0f0] px-6 py-4">
+          <View className="flex-row items-center justify-between border-b border-border px-6 py-4">
             <Text className="text-[17px] font-sans-bold text-primary">
               Default currency
             </Text>
             <Pressable
               onPress={onClose}
-              className="size-8 items-center justify-center rounded-full bg-[#f0f0f0]"
+              className="size-8 items-center justify-center rounded-full bg-muted"
             >
-              <Ionicons name="close" size={16} color="#666" />
+              <Ionicons name="close" size={16} color={isDark ? "#888" : "#666"} />
             </Pressable>
           </View>
 
-          {/* Search */}
-          <View className="mx-6 mt-4 flex-row items-center gap-2 rounded-xl border border-[#e5e5e5] bg-[#f8f8f8] px-3.5 py-2.5">
-            <Ionicons name="search-outline" size={16} color="#999" />
+{/* Search */}
+          <View className="mx-6 mt-4 flex-row items-center gap-2 rounded-xl border border-input bg-muted px-3.5 py-2.5">
+            <Ionicons name="search-outline" size={16} color={isDark ? "rgba(237, 237, 237, 0.4)" : "rgba(55, 53, 47, 0.4)"} />
             <TextInput
               className="min-w-0 flex-1 text-[15px] font-sans-medium text-primary"
-              placeholderTextColor="rgba(55, 53, 47, 0.35)"
+              placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
               placeholder="Search currencies…"
               value={query}
               onChangeText={setQuery}
@@ -136,7 +138,7 @@ export default function CurrencyPickerSheet({
             />
             {query.length > 0 && (
               <Pressable onPress={() => setQuery("")}>
-                <Ionicons name="close-circle" size={16} color="#bbb" />
+                <Ionicons name="close-circle" size={16} color={isDark ? "rgba(237, 237, 237, 0.3)" : "rgba(55, 53, 47, 0.3)"} />
               </Pressable>
             )}
           </View>

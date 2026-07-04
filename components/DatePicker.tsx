@@ -3,6 +3,7 @@ import clsx from "clsx";
 import dayjs from "dayjs";
 import React, { useMemo, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
+import { useTheme } from "@/lib/useThemeSync";
 
 interface DatePickerProps {
   visible: boolean;
@@ -33,6 +34,7 @@ export default function DatePicker({
   );
 
   const minParsed = minDate ? dayjs(minDate, "MM/DD/YYYY", true) : null;
+  const { isDark } = useTheme();
 
   const year = viewMonth.year();
   const month = viewMonth.month();
@@ -84,7 +86,7 @@ export default function DatePicker({
         onPress={onCancel}
       >
         <Pressable
-          className="w-[340px] rounded-2xl bg-white p-5"
+          className="w-[340px] rounded-2xl bg-white dark:bg-[#1a1a1a] p-5"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 8 },
@@ -105,7 +107,7 @@ export default function DatePicker({
               onPress={handlePrev}
               className="size-9 items-center justify-center rounded-full bg-muted"
             >
-              <Ionicons name="chevron-back" size={18} color="#191919" />
+              <Ionicons name="chevron-back" size={18} color={isDark ? "#ededed" : "#191919"} />
             </Pressable>
             <Text className="text-base font-sans-semibold text-primary">
               {monthLabel}
@@ -114,7 +116,7 @@ export default function DatePicker({
               onPress={handleNext}
               className="size-9 items-center justify-center rounded-full bg-muted"
             >
-              <Ionicons name="chevron-forward" size={18} color="#191919" />
+              <Ionicons name="chevron-forward" size={18} color={isDark ? "#ededed" : "#191919"} />
             </Pressable>
           </View>
 
@@ -149,7 +151,7 @@ export default function DatePicker({
                   <View
                     className={clsx(
                       "size-9 items-center justify-center rounded-full",
-                      isSelected && "bg-primary",
+                      isSelected && "bg-primary dark:bg-foreground",
                       !isSelected && isToday && "bg-accent/10",
                       disabled && "opacity-30",
                     )}
@@ -157,7 +159,7 @@ export default function DatePicker({
                     <Text
                       className={clsx(
                         "text-sm font-sans-semibold",
-                        isSelected && "text-white",
+                        isSelected && "text-white dark:text-background",
                         !isSelected && !isToday && "text-primary",
                         !isSelected && isToday && "text-accent",
                       )}
@@ -184,11 +186,11 @@ export default function DatePicker({
               onPress={handleConfirm}
               disabled={selectedDay === null}
               className={clsx(
-                "flex-1 items-center rounded-xl bg-primary py-3",
+                "flex-1 items-center rounded-xl bg-primary dark:bg-foreground py-3",
                 selectedDay === null && "opacity-40",
               )}
             >
-              <Text className="text-sm font-sans-bold text-white">
+              <Text className="text-sm font-sans-bold text-white dark:text-background">
                 Confirm
               </Text>
             </Pressable>

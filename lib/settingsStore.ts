@@ -42,9 +42,11 @@ export const DEFAULT_CATEGORIES = [
   "Other",
 ] as const;
 
+export type ThemeMode = "system" | "light" | "dark";
+
 interface SettingsState {
   currency: CurrencyCode;
-  darkMode: boolean;
+  themeMode: ThemeMode;
   billingAlertEnabled: boolean;
   billingAlertDays: number;
   renewalReminderEnabled: boolean;
@@ -53,7 +55,7 @@ interface SettingsState {
   hasOnboarded: boolean;
 
   setCurrency: (currency: CurrencyCode) => void;
-  setDarkMode: (darkMode: boolean) => void;
+  setThemeMode: (mode: ThemeMode) => void;
   setBillingAlertEnabled: (enabled: boolean) => void;
   setBillingAlertDays: (days: number) => void;
   setRenewalReminderEnabled: (enabled: boolean) => void;
@@ -67,7 +69,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       currency: "USD",
-      darkMode: false,
+      themeMode: "system",
       billingAlertEnabled: false,
       billingAlertDays: 3,
       renewalReminderEnabled: false,
@@ -76,7 +78,7 @@ export const useSettingsStore = create<SettingsState>()(
       hasOnboarded: false,
 
       setCurrency: (currency) => set({ currency }),
-      setDarkMode: (darkMode) => set({ darkMode }),
+      setThemeMode: (themeMode) => set({ themeMode }),
       setBillingAlertEnabled: (billingAlertEnabled) =>
         set({ billingAlertEnabled }),
       setBillingAlertDays: (billingAlertDays) => set({ billingAlertDays }),

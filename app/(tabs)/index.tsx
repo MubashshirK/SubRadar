@@ -17,11 +17,13 @@ import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/lib/useThemeSync";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
   const { user } = useUser();
   const currency = useSettingsStore((s) => s.currency);
+  const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
@@ -112,9 +114,9 @@ export default function App() {
 
               <Pressable
                 onPress={() => setIsModalVisible(true)}
-                className="size-10 items-center justify-center rounded-full bg-primary"
+                className="size-10 items-center justify-center rounded-full bg-muted"
               >
-                <Ionicons name="add" size={20} color="#fff" />
+                <Ionicons name="add" size={20} color={isDark ? "#ededed" : "#191919"} />
               </Pressable>
             </View>
 

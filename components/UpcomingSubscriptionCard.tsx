@@ -31,16 +31,12 @@ const UpcomingSubscriptionCard = ({
 
   return (
     <View
-      className="mr-3 w-44 rounded-2xl border p-3.5"
-      style={{
-        backgroundColor: "#fff",
-        borderWidth: 1,
-        borderColor: "rgba(55, 53, 47, 0.12)",
-      }}
+      className="mr-3 w-44 rounded-2xl border border-border bg-card p-3.5 dark:bg-[#1a1a1a]"
+      style={{ borderWidth: 1 }}
     >
       <View className="flex-row items-start justify-between">
         <View
-          className="size-10 items-center justify-center rounded-xl overflow-hidden"
+          className="size-10 items-center justify-center rounded-xl overflow-hidden bg-white"
         >
           {domain ? (
             <Image

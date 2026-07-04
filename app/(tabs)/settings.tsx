@@ -8,8 +8,10 @@ import images from "@/constants/images";
 import EditProfileSheet from "@/components/settings/EditProfileSheet";
 import ChangePasswordSheet from "@/components/settings/ChangePasswordSheet";
 import ChangeEmailSheet from "@/components/settings/ChangeEmailSheet";
-import { useSettingsStore, CURRENCIES, CurrencyCode } from "@/lib/settingsStore";
+import { useSettingsStore, CURRENCIES, CurrencyCode, ThemeMode } from "@/lib/settingsStore";
 import CurrencyPickerSheet from "@/components/settings/CurrencyPickerSheet";
+import ThemePickerSheet from "@/components/settings/ThemePickerSheet";
+import { useTheme } from "@/lib/useThemeSync";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -51,7 +53,7 @@ const Row = ({
   isLast,
   onPress,
 }: RowProps) => {
-  const borderClass = !isLast ? "border-b border-[#f0f0f0]" : "";
+  const borderClass = !isLast ? "border-b border-border" : "";
   const radiusClass = isFirst
     ? "rounded-t-2xl"
     : isLast
@@ -92,15 +94,19 @@ const Settings = () => {
   const [showChangePassword, setShowChangePassword] = React.useState(false);
   const [showChangeEmail, setShowChangeEmail] = React.useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = React.useState(false);
+  const [showThemePicker, setShowThemePicker] = React.useState(false);
+  const { isDark } = useTheme();
 
   const {
     currency,
+    themeMode,
     billingAlertEnabled,
     billingAlertDays,
     renewalReminderEnabled,
     renewalReminderDays,
     customCategories,
     setCurrency,
+    setThemeMode,
     setBillingAlertEnabled,
     setBillingAlertDays,
     setRenewalReminderEnabled,
@@ -109,6 +115,12 @@ const Settings = () => {
 
   const currencyObj = CURRENCIES.find((c) => c.code === currency);
   const currencyLabel = currencyObj ? `${currencyObj.symbol} ${currencyObj.code}` : currency;
+
+  const themeModeLabel: Record<ThemeMode, string> = {
+    system: "System",
+    light: "Light",
+    dark: "Dark",
+  };
 
   const displayName = user?.fullName || user?.firstName || "User";
   const email = user?.primaryEmailAddress?.emailAddress || "";
@@ -137,7 +149,7 @@ const Settings = () => {
         </Text>
 
         {/* ── Profile Card ── */}
-        <Pressable className="mb-8 flex-row items-center gap-4 rounded-2xl bg-white px-5 py-5">
+        <Pressable className="mb-8 flex-row items-center gap-4 rounded-2xl bg-white dark:bg-[#1a1a1a] px-5 py-5">
           <Image source={avatarSource} className="size-14 rounded-full" />
           <View className="min-w-0 flex-1">
             <Text
@@ -163,7 +175,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Account
           </Text>
-          <View className="rounded-2xl bg-white">
+          <View className="rounded-2xl bg-white dark:bg-[#1a1a1a]">
             <Row
               icon="person-outline"
               iconColor="#2f6fed"
@@ -198,7 +210,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Subscriptions
           </Text>
-          <View className="rounded-2xl bg-white">
+          <View className="rounded-2xl bg-white dark:bg-[#1a1a1a]">
             <Row
               icon="card-outline"
               iconColor="#e03e3e"
@@ -209,8 +221,8 @@ const Settings = () => {
                 <Switch
                   value={billingAlertEnabled}
                   onValueChange={setBillingAlertEnabled}
-                  trackColor={{ false: "#e5e5e5", true: "#e03e3e" }}
-                  thumbColor="#fff"
+                  trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#e03e3e" }}
+                  thumbColor={isDark ? "#ededed" : "#fff"}
                 />
               }
               isFirst
@@ -225,8 +237,8 @@ const Settings = () => {
                 <Switch
                   value={renewalReminderEnabled}
                   onValueChange={setRenewalReminderEnabled}
-                  trackColor={{ false: "#e5e5e5", true: "#ea7a53" }}
-                  thumbColor="#fff"
+                  trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#ea7a53" }}
+                  thumbColor={isDark ? "#ededed" : "#fff"}
                 />
               }
             />
@@ -261,22 +273,24 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Appearance
           </Text>
-          <View className="rounded-2xl bg-white">
+          <View className="rounded-2xl bg-white dark:bg-[#1a1a1a]">
             <Row
               icon="moon-outline"
               iconColor="#191919"
               iconBg="#efefed"
               label="Dark mode"
+              description={themeModeLabel[themeMode]}
               rightElement={
                 <View className="flex-row items-center gap-1.5">
                   <Text className="text-[13px] font-sans-medium text-muted-foreground">
-                    Off
+                    {themeModeLabel[themeMode]}
                   </Text>
                   <Ionicons name="chevron-forward" size={16} color="#ccc" />
                 </View>
               }
               isFirst
               isLast
+              onPress={() => setShowThemePicker(true)}
             />
           </View>
         </View>
@@ -286,7 +300,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Support
           </Text>
-          <View className="rounded-2xl bg-white">
+          <View className="rounded-2xl bg-white dark:bg-[#1a1a1a]">
             <Row
               icon="help-circle-outline"
               iconColor="#2f6fed"
@@ -317,7 +331,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Legal
           </Text>
-          <View className="rounded-2xl bg-white">
+          <View className="rounded-2xl bg-white dark:bg-[#1a1a1a]">
             <Row
               icon="document-text-outline"
               iconColor="#9a6700"
@@ -337,7 +351,7 @@ const Settings = () => {
 
         {/* ── Sign Out ── */}
         <Pressable
-          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl bg-white px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
+          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl bg-white dark:bg-[#1a1a1a] px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
           onPress={handleSignOut}
           disabled={isSigningOut}
         >
@@ -349,9 +363,9 @@ const Settings = () => {
           </Text>
         </Pressable>
 
-        {/* ── Version ── */}
+        {/* ── Credit & Version ── */}
         <Text className="text-center text-[12px] font-sans-medium text-muted-foreground">
-          SubRadar v1.0.0
+          SubRadar v1.0.0 | Mubashshir Khan
         </Text>
       </ScrollView>
 
@@ -373,6 +387,12 @@ const Settings = () => {
         onClose={() => setShowCurrencyPicker(false)}
         selected={currency}
         onSelect={setCurrency}
+      />
+      <ThemePickerSheet
+        visible={showThemePicker}
+        onClose={() => setShowThemePicker(false)}
+        selected={themeMode}
+        onSelect={setThemeMode}
       />
     </SafeAreaView>
   );

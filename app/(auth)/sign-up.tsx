@@ -11,12 +11,14 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTheme } from "@/lib/useThemeSync";
 
 const CODE_LENGTH = 6;
 
 export default function SignUpScreen() {
   const { signUp, errors, fetchStatus } = useSignUp();
   const router = useRouter();
+  const { isDark } = useTheme();
   const codeInputRef = React.useRef<TextInput>(null);
 
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -105,7 +107,7 @@ export default function SignUpScreen() {
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 bg-white"
+        className="flex-1 bg-white dark:bg-background"
       >
         <View className="flex-1 justify-between">
           <ScrollView
@@ -201,7 +203,7 @@ export default function SignUpScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+      className="flex-1 bg-white dark:bg-background"
     >
       <View className="flex-1 justify-between">
         <ScrollView
@@ -226,7 +228,7 @@ export default function SignUpScreen() {
               <TextInput
                 className="auth-input"
                 placeholder="Email Address"
-                placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                 value={emailAddress}
                 onChangeText={(v) => {
                   setEmailAddress(v);
@@ -255,7 +257,7 @@ export default function SignUpScreen() {
               <TextInput
                 className="auth-input"
                 placeholder="Password (min 8 characters)"
-                placeholderTextColor="rgba(55, 53, 47, 0.35)"
+                placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
                 value={password}
                 onChangeText={(v) => {
                   setPassword(v);

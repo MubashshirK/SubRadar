@@ -1,3 +1,4 @@
+import { useTheme } from "@/lib/useThemeSync";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -19,6 +20,7 @@ type Props = {
 
 export default function EditProfileSheet({ visible, onClose }: Props) {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const [firstName, setFirstName] = React.useState(user?.firstName || "");
   const [lastName, setLastName] = React.useState(user?.lastName || "");
   const [imageUri, setImageUri] = React.useState<string | null>(null);
@@ -96,12 +98,12 @@ export default function EditProfileSheet({ visible, onClose }: Props) {
           {avatarSource ? (
             <Image source={avatarSource} className="size-20 rounded-full" />
           ) : (
-            <View className="size-20 items-center justify-center rounded-full bg-[#f0f0f0]">
+            <View className="size-20 items-center justify-center rounded-full bg-muted">
               <Ionicons name="person-outline" size={32} color="#999" />
             </View>
           )}
-          <View className="absolute -bottom-1 -right-1 size-7 items-center justify-center rounded-full bg-primary">
-            <Ionicons name="camera" size={13} color="white" />
+          <View className="absolute -bottom-1 -right-1 size-7 items-center justify-center rounded-full bg-primary dark:bg-foreground">
+            <Ionicons name="camera" size={13} color="black" />
           </View>
         </Pressable>
         <Pressable onPress={pickImage} className="mt-2">
@@ -117,8 +119,10 @@ export default function EditProfileSheet({ visible, onClose }: Props) {
           First name
         </Text>
         <TextInput
-          className="rounded-xl border border-[#e5e5e5] bg-white pl-4 pr-11 py-3.5 text-[15px] font-sans-medium text-primary"
-          placeholderTextColor="rgba(55, 53, 47, 0.35)"
+          className="rounded-xl border border-input bg-background pl-4 pr-11 py-3.5 text-[15px] font-sans-medium text-primary"
+          placeholderTextColor={
+            isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"
+          }
           value={firstName}
           onChangeText={setFirstName}
           placeholder="First name"
@@ -131,8 +135,10 @@ export default function EditProfileSheet({ visible, onClose }: Props) {
           Last name
         </Text>
         <TextInput
-          className="rounded-xl border border-[#e5e5e5] bg-white pl-4 pr-11 py-3.5 text-[15px] font-sans-medium text-primary"
-          placeholderTextColor="rgba(55, 53, 47, 0.35)"
+          className="rounded-xl border border-input bg-background pl-4 pr-11 py-3.5 text-[15px] font-sans-medium text-primary"
+          placeholderTextColor={
+            isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"
+          }
           value={lastName}
           onChangeText={setLastName}
           placeholder="Last name (optional)"
@@ -151,14 +157,14 @@ export default function EditProfileSheet({ visible, onClose }: Props) {
 
       {/* Save button */}
       <Pressable
-        className={`mt-2 items-center rounded-full bg-primary py-4 ${loading ? "opacity-60" : ""}`}
+        className={`mt-2 items-center rounded-full bg-primary dark:bg-foreground py-4 ${loading ? "opacity-60" : ""}`}
         onPress={handleSave}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator size="small" color="white" />
         ) : (
-          <Text className="text-[15px] font-sans-bold text-white">
+          <Text className="text-[15px] font-sans-bold text-white dark:text-background">
             Save changes
           </Text>
         )}
