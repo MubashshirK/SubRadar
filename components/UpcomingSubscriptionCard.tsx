@@ -30,9 +30,14 @@ const UpcomingSubscriptionCard = ({
     : price;
 
   return (
-    <View
-      className="mr-3 w-44 rounded-2xl border border-border bg-card p-3.5 dark:bg-[#1a1a1a]"
-      style={{ borderWidth: 1 }}
+    <View className="mr-3 w-44 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-3.5"
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
+      }}
     >
       <View className="flex-row items-start justify-between">
         <View

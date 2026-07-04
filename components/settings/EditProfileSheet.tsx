@@ -103,7 +103,7 @@ export default function EditProfileSheet({ visible, onClose }: Props) {
             </View>
           )}
           <View className="absolute -bottom-1 -right-1 size-7 items-center justify-center rounded-full bg-primary dark:bg-foreground">
-            <Ionicons name="camera" size={13} color="black" />
+            <Ionicons name="camera" size={13} color={isDark ? "#191919" : "white"} />
           </View>
         </Pressable>
         <Pressable onPress={pickImage} className="mt-2">

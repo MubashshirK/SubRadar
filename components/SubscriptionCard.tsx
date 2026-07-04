@@ -1,7 +1,6 @@
 import { getLogoUrl } from "@/lib/logo";
 import {
   convertAndFormat,
-  formatCurrency,
   formatSubscriptionDateLong,
   getDaysUntilRenewal,
   getMonthsActive,
@@ -118,8 +117,9 @@ const SubscriptionCard = ({
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        elevation: 0.5,
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
       }}
     >
       {/* Collapsed Row */}
