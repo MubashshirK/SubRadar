@@ -1,8 +1,10 @@
-import { formatCurrency } from "@/lib/utils";
+import { convertAndFormat } from "@/lib/utils";
 import { getLogoUrl } from "@/lib/logo";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Image } from "expo-image";
+import { getExchangeRates } from "@/lib/currency";
+import { useSettingsStore } from "@/lib/settingsStore";
 
 const UpcomingSubscriptionCard = ({
   name,
@@ -13,6 +15,20 @@ const UpcomingSubscriptionCard = ({
   color,
   domain,
 }: UpcomingSubscription) => {
+  const displayCurrency = useSettingsStore((s) => s.currency);
+  const [rates, setRates] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const converted = rates
+    ? (() => {
+        const r = rates[currency || "USD"];
+        return r ? price * r : price;
+      })()
+    : price;
+
   return (
     <View
       className="mr-3 w-44 rounded-2xl border p-3.5"
@@ -37,7 +53,7 @@ const UpcomingSubscriptionCard = ({
           )}
         </View>
         <Text className="text-sm font-sans-bold text-primary">
-          {formatCurrency(price, currency)}
+          {convertAndFormat(price, currency || "USD", displayCurrency, rates)}
         </Text>
       </View>
 

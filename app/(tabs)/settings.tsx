@@ -1,13 +1,15 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
 import images from "@/constants/images";
 import EditProfileSheet from "@/components/settings/EditProfileSheet";
 import ChangePasswordSheet from "@/components/settings/ChangePasswordSheet";
 import ChangeEmailSheet from "@/components/settings/ChangeEmailSheet";
+import { useSettingsStore, CURRENCIES, CurrencyCode } from "@/lib/settingsStore";
+import CurrencyPickerSheet from "@/components/settings/CurrencyPickerSheet";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -89,6 +91,24 @@ const Settings = () => {
   const [showEditProfile, setShowEditProfile] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);
   const [showChangeEmail, setShowChangeEmail] = React.useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = React.useState(false);
+
+  const {
+    currency,
+    billingAlertEnabled,
+    billingAlertDays,
+    renewalReminderEnabled,
+    renewalReminderDays,
+    customCategories,
+    setCurrency,
+    setBillingAlertEnabled,
+    setBillingAlertDays,
+    setRenewalReminderEnabled,
+    setRenewalReminderDays,
+  } = useSettingsStore();
+
+  const currencyObj = CURRENCIES.find((c) => c.code === currency);
+  const currencyLabel = currencyObj ? `${currencyObj.symbol} ${currencyObj.code}` : currency;
 
   const displayName = user?.fullName || user?.firstName || "User";
   const email = user?.primaryEmailAddress?.emailAddress || "";
@@ -184,7 +204,15 @@ const Settings = () => {
               iconColor="#e03e3e"
               iconBg="#fdecea"
               label="Billing alerts"
-              description="Get notified before renewals"
+              description={billingAlertEnabled ? `Alert ${billingAlertDays} day${billingAlertDays > 1 ? "s" : ""} before renewal` : "Off"}
+              rightElement={
+                <Switch
+                  value={billingAlertEnabled}
+                  onValueChange={setBillingAlertEnabled}
+                  trackColor={{ false: "#e5e5e5", true: "#e03e3e" }}
+                  thumbColor="#fff"
+                />
+              }
               isFirst
             />
             <Row
@@ -192,7 +220,15 @@ const Settings = () => {
               iconColor="#ea7a53"
               iconBg="#fdf0ea"
               label="Renewal reminders"
-              description="Remind me before a subscription renews"
+              description={renewalReminderEnabled ? `Remind ${renewalReminderDays} day${renewalReminderDays > 1 ? "s" : ""} before` : "Off"}
+              rightElement={
+                <Switch
+                  value={renewalReminderEnabled}
+                  onValueChange={setRenewalReminderEnabled}
+                  trackColor={{ false: "#e5e5e5", true: "#ea7a53" }}
+                  thumbColor="#fff"
+                />
+              }
             />
             <Row
               icon="globe-outline"
@@ -202,18 +238,19 @@ const Settings = () => {
               rightElement={
                 <View className="flex-row items-center gap-1.5">
                   <Text className="text-[13px] font-sans-medium text-muted-foreground">
-                    USD
+                    {currencyLabel}
                   </Text>
                   <Ionicons name="chevron-forward" size={16} color="#ccc" />
                 </View>
               }
+              onPress={() => setShowCurrencyPicker(true)}
             />
             <Row
               icon="pricetag-outline"
               iconColor="#7c3aed"
               iconBg="#f3eefb"
               label="Categories"
-              description="Manage your categories"
+              description={`${customCategories.length} custom ${customCategories.length === 1 ? "category" : "categories"}`}
               isLast
             />
           </View>
@@ -330,6 +367,12 @@ const Settings = () => {
       <ChangeEmailSheet
         visible={showChangeEmail}
         onClose={() => setShowChangeEmail(false)}
+      />
+      <CurrencyPickerSheet
+        visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        selected={currency}
+        onSelect={setCurrency}
       />
     </SafeAreaView>
   );

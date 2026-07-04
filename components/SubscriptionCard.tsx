@@ -1,5 +1,6 @@
 import { getLogoUrl } from "@/lib/logo";
 import {
+  convertAndFormat,
   formatCurrency,
   formatSubscriptionDateLong,
   getDaysUntilRenewal,
@@ -9,7 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { Image } from "expo-image";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -17,6 +18,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { getExchangeRates } from "@/lib/currency";
+import { useSettingsStore } from "@/lib/settingsStore";
 
 const DETAIL_ICONS = {
   payment: "card-outline" as const,
@@ -48,6 +51,8 @@ const SubscriptionCard = ({
   status,
   domain,
 }: SubscriptionCardProps) => {
+  const displayCurrency = useSettingsStore((s) => s.currency);
+  const [rates, setRates] = useState<Record<string, number>>({});
   const cardColor = color ?? "#2f6fed";
   const smartStatus = getSmartStatusLabel(status, renewalDate);
   const monthsActive = getMonthsActive(startDate);
@@ -58,6 +63,14 @@ const SubscriptionCard = ({
   const displayMeta = category?.trim() || plan?.trim() || "";
 
   const imageSource = domain ? { uri: getLogoUrl(domain, 128) } : icon;
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const fmt = (value: number, subCurrency?: string) => {
+    return convertAndFormat(value, subCurrency || currency || "USD", displayCurrency, rates);
+  };
 
   // Simple expand animation
   const expandAnim = useSharedValue(0);
@@ -149,7 +162,7 @@ const SubscriptionCard = ({
         {/* Price + Status block */}
         <View className="sub-price-block">
           <Text className="sub-price">
-            {formatCurrency(price, currency)}
+            {fmt(price, currency)}
             <Text className="sub-billing-label">
               {billing === "Yearly" ? "/yr" : "/mo"}
             </Text>
@@ -201,7 +214,7 @@ const SubscriptionCard = ({
                   />
                   <Text className="sub-detail-label">Monthly equivalent</Text>
                   <Text numberOfLines={1} className="sub-detail-value">
-                    {formatCurrency(monthlyEquiv, currency)}/mo
+                    {fmt(monthlyEquiv, currency)}/mo
                   </Text>
                 </View>
               </View>
@@ -270,7 +283,7 @@ const SubscriptionCard = ({
                   />
                   <Text className="sub-detail-label">Total spent</Text>
                   <Text numberOfLines={1} className="sub-detail-value">
-                    {formatCurrency(totalSpent, currency)}
+                    {fmt(totalSpent, currency)}
                   </Text>
                 </View>
                 <View className="sub-detail-row">
@@ -294,7 +307,7 @@ const SubscriptionCard = ({
                   />
                   <Text className="sub-detail-label">Avg cost / month</Text>
                   <Text numberOfLines={1} className="sub-detail-value">
-                    {formatCurrency(monthlyEquiv, currency)}
+                    {fmt(monthlyEquiv, currency)}
                   </Text>
                 </View>
               </View>

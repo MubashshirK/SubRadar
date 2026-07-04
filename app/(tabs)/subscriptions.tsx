@@ -1,11 +1,13 @@
 import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
+import { useSettingsStore } from "@/lib/settingsStore";
 import { formatCurrency } from "@/lib/utils";
+import { getExchangeRates, convertSync } from "@/lib/currency";
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { styled } from "nativewind";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -18,6 +20,12 @@ const Subscriptions = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
+  const currency = useSettingsStore((s) => s.currency);
+  const [rates, setRates] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
 
   const categories = useMemo(() => {
     const cats = new Set(
@@ -29,9 +37,10 @@ const Subscriptions = () => {
   const totalMonthly = useMemo(
     () =>
       subscriptions.reduce((sum, sub) => {
-        return sum + (sub.billing === "Yearly" ? sub.price / 12 : sub.price);
+        const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+        return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
       }, 0),
-    [subscriptions],
+    [subscriptions, rates, currency],
   );
 
   const filteredSubscriptions = useMemo(() => {
@@ -94,7 +103,7 @@ const Subscriptions = () => {
 
             {/* Summary */}
             <Text className="mb-5 text-sm font-sans-medium text-muted-foreground">
-              {subscriptions.length} active · {formatCurrency(totalMonthly)}/mo
+              {subscriptions.length} active · {formatCurrency(totalMonthly, currency)}/mo
               total
             </Text>
 

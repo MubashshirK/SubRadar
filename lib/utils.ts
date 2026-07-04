@@ -1,16 +1,27 @@
 import dayjs from "dayjs";
+import { convertSync } from "./currency";
 
-export const formatCurrency = (value: number, currency = "USD"): string => {
+export const formatCurrency = (value: number, currency = "USD", decimals = 2): string => {
     try {
         return new Intl.NumberFormat("en-US", {
             style: "currency",
             currency,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
         }).format(value);
     } catch {
-        return value.toFixed(2);
+        return value.toFixed(decimals);
     }
+};
+
+export const convertAndFormat = (
+    value: number,
+    fromCurrency: string,
+    toCurrency: string,
+    rates: Record<string, number>,
+): string => {
+    const converted = convertSync(value, fromCurrency, toCurrency, rates);
+    return formatCurrency(converted, toCurrency);
 };
 
 export const formatSubscriptionDateTime = (value?: string): string => {

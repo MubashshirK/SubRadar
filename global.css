@@ -80,11 +80,11 @@
   }
 
   .home-balance-row {
-    @apply flex-row items-end justify-between;
+    @apply flex-row items-end justify-between gap-3;
   }
 
   .home-balance-amount {
-    @apply text-[42px] font-sans-extrabold text-white;
+    @apply min-w-0 flex-shrink text-[42px] font-sans-extrabold text-white;
     letter-spacing: -1px;
   }
 

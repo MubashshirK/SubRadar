@@ -5,6 +5,12 @@ import dayjs from "dayjs";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -23,6 +29,7 @@ import {
   type ServiceEntry,
 } from "@/lib/logo";
 import DatePicker from "@/components/DatePicker";
+import { useSettingsStore } from "@/lib/settingsStore";
 
 type Frequency = "Monthly" | "Yearly";
 
@@ -63,10 +70,10 @@ const CATEGORY_COLORS: Record<string, string> = {
   Other: "#d4d4d4",
 };
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
@@ -86,6 +93,7 @@ const CreateSubscriptionModal = ({
   initialSubscription,
 }: CreateSubscriptionModalProps) => {
   const isEditing = !!initialSubscription;
+  const currency = useSettingsStore((s) => s.currency);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("Monthly");
@@ -105,9 +113,16 @@ const CreateSubscriptionModal = ({
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showRenewalDatePicker, setShowRenewalDatePicker] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const { height: screenHeight } = useWindowDimensions();
   const cardMaxHeight = screenHeight * 0.88;
+
+  const cardTranslateY = useSharedValue(screenHeight);
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: cardTranslateY.value }],
+  }));
 
   const isValidForm = name.trim() !== "" && parseFloat(price) > 0;
 
@@ -117,8 +132,8 @@ const CreateSubscriptionModal = ({
 
   const displayCostLabel = useMemo(() => {
     if (!isValidForm) return "";
-    return ` — ${formatCurrency(priceValue)}/${frequency === "Monthly" ? "mo" : "yr"}`;
-  }, [isValidForm, priceValue, frequency]);
+    return ` — ${formatCurrency(priceValue, currency)}/${frequency === "Monthly" ? "mo" : "yr"}`;
+  }, [isValidForm, priceValue, frequency, currency]);
 
   const calculatedRenewal = useMemo(() => {
     const parsed = dayjs(startDateStr, "MM/DD/YYYY", true);
@@ -180,8 +195,27 @@ const CreateSubscriptionModal = ({
     setShowRenewalDatePicker(false);
   };
 
+  useEffect(() => {
+    if (visible) {
+      setIsModalVisible(true);
+      cardTranslateY.value = withTiming(0, {
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+      });
+    } else {
+      resetForm();
+      cardTranslateY.value = withTiming(screenHeight, {
+        duration: 300,
+        easing: Easing.in(Easing.cubic),
+      });
+      const timer = setTimeout(() => {
+        setIsModalVisible(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, cardTranslateY, screenHeight]);
+
   const handleClose = () => {
-    resetForm();
     onClose();
   };
 
@@ -246,7 +280,7 @@ const CreateSubscriptionModal = ({
       id: initialSubscription?.id ?? `sub-${Date.now()}`,
       name: name.trim(),
       price: priceVal,
-      currency: "USD",
+      currency,
       frequency,
       category: finalCategory,
       status: "active",
@@ -267,9 +301,9 @@ const CreateSubscriptionModal = ({
 
   return (
     <Modal
-      visible={visible}
+      visible={isModalVisible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
@@ -288,18 +322,22 @@ const CreateSubscriptionModal = ({
             }}
             onPress={handleClose}
           />
-          <View
-            style={{
-              maxHeight: cardMaxHeight,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              backgroundColor: "#fff",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 24,
-              elevation: 20,
-            }}
+          <Animated.View
+            style={[
+              {
+                maxHeight: cardMaxHeight,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                backgroundColor: "#fff",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 24,
+                elevation: 20,
+              },
+              cardAnimatedStyle,
+            ]}
+            className="overflow-hidden"
           >
             {/* Drag Handle */}
             <View className="w-9 h-1 rounded-full bg-black/10 self-center mt-2 mb-4" />
@@ -311,9 +349,9 @@ const CreateSubscriptionModal = ({
               </Text>
               <Pressable
                 onPress={handleClose}
-                className="size-8 items-center justify-center rounded-full"
+                className="size-8 items-center justify-center rounded-full bg-[#f0f0f0]"
               >
-                <Ionicons name="close" size={20} color="#191919" />
+                <Ionicons name="close" size={16} color="#666" />
               </Pressable>
             </View>
 
@@ -688,7 +726,7 @@ const CreateSubscriptionModal = ({
                 </Text>
               </Pressable>
             </View>
-          </View>
+          </Animated.View>
         </View>
       </KeyboardAvoidingView>
 

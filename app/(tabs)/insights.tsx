@@ -1,8 +1,10 @@
 import { getLogoUrl } from "@/lib/logo";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
+import { useSettingsStore } from "@/lib/settingsStore";
 import { formatCurrency } from "@/lib/utils";
+import { getExchangeRates, convertSync } from "@/lib/currency";
 import { Ionicons } from "@expo/vector-icons";
-import clsx from "clsx";
+import {clsx} from "clsx";
 import { Image } from "expo-image";
 import { styled } from "nativewind";
 import React, {
@@ -57,21 +59,29 @@ function useAnimatedNumber(target: number, duration = 800) {
 
 const Insights = () => {
   const { subscriptions } = useSubscriptionStore();
+  const currency = useSettingsStore((s) => s.currency);
   const [period, setPeriod] = useState<Period>("monthly");
+  const [rates, setRates] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const fmt = (value: number) => formatCurrency(value, currency);
 
   const monthlyTotal = useMemo(() => {
     return subscriptions.reduce((sum, sub) => {
       const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
-      return sum + monthly;
+      return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
     }, 0);
-  }, [subscriptions]);
+  }, [subscriptions, rates, currency]);
 
   const yearlyTotal = useMemo(() => {
     return subscriptions.reduce((sum, sub) => {
       const annual = sub.billing === "Yearly" ? sub.price : sub.price * 12;
-      return sum + annual;
+      return sum + convertSync(annual, sub.currency || "USD", currency, rates);
     }, 0);
-  }, [subscriptions]);
+  }, [subscriptions, rates, currency]);
 
   const activeSubCount = useMemo(
     () => subscriptions.filter((s) => s.status === "active").length,
@@ -86,9 +96,10 @@ const Insights = () => {
     const map = new Map<string, number>();
     for (const sub of subscriptions) {
       const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+      const converted = convertSync(monthly, sub.currency || "USD", currency, rates);
       map.set(
         sub.category ?? "Other",
-        (map.get(sub.category ?? "Other") ?? 0) + monthly,
+        (map.get(sub.category ?? "Other") ?? 0) + converted,
       );
     }
     const max = Math.max(...map.values(), 1);
@@ -97,32 +108,36 @@ const Insights = () => {
         category,
         total,
         yearlyTotal: total * 12,
-        percentage: Math.round((total / monthlyTotal) * 100),
+        percentage: monthlyTotal > 0 ? Math.round((total / monthlyTotal) * 100) : 0,
         barWidth: total / max,
         color: getCategoryColor(category, i),
       }))
       .sort((a, b) => b.total - a.total);
-  }, [subscriptions, monthlyTotal]);
+  }, [subscriptions, monthlyTotal, rates, currency]);
 
   const topSubscriptions = useMemo(() => {
-    const max = Math.max(...subscriptions.map((s) => s.price), 1);
-    return [...subscriptions]
-      .sort((a, b) => {
-        const aMonthly = a.billing === "Yearly" ? a.price / 12 : a.price;
-        const bMonthly = b.billing === "Yearly" ? b.price / 12 : b.price;
-        return bMonthly - aMonthly;
-      })
-      .map((sub) => {
-        const monthlyCost =
-          sub.billing === "Yearly" ? sub.price / 12 : sub.price;
-        return {
-          ...sub,
-          monthlyCost,
-          yearlyCost: sub.billing === "Yearly" ? sub.price : sub.price * 12,
-          barWidth: monthlyCost / max,
-        };
-      });
-  }, [subscriptions]);
+    const converted = subscriptions.map((sub) => {
+      const monthlyCost =
+        sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+      const convertedMonthly = convertSync(monthlyCost, sub.currency || "USD", currency, rates);
+      const yearlyCost = sub.billing === "Yearly" ? sub.price : sub.price * 12;
+      const convertedYearly = convertSync(yearlyCost, sub.currency || "USD", currency, rates);
+      return {
+        ...sub,
+        monthlyCost: convertedMonthly,
+        convertedMonthly,
+        yearlyCost: convertedYearly,
+        convertedYearly,
+      };
+    });
+    const max = Math.max(...converted.map((s) => s.convertedMonthly), 1);
+    return converted
+      .sort((a, b) => b.convertedMonthly - a.convertedMonthly)
+      .map((sub) => ({
+        ...sub,
+        barWidth: sub.convertedMonthly / max,
+      }));
+  }, [subscriptions, rates]);
 
   const billingBreakdown = useMemo(() => {
     let monthlyCount = 0;
@@ -132,10 +147,10 @@ const Insights = () => {
     for (const sub of subscriptions) {
       if (sub.billing === "Yearly") {
         yearlyCount++;
-        yearlyCost += sub.price;
+        yearlyCost += convertSync(sub.price, sub.currency || "USD", currency, rates);
       } else {
         monthlyCount++;
-        monthlyCost += sub.price;
+        monthlyCost += convertSync(sub.price, sub.currency || "USD", currency, rates);
       }
     }
     return {
@@ -146,7 +161,7 @@ const Insights = () => {
         monthlyEquiv: yearlyCost / 12,
       },
     };
-  }, [subscriptions]);
+  }, [subscriptions, rates]);
 
   const smartInsight = useMemo(() => {
     if (categoryBreakdown.length === 0) return null;
@@ -156,12 +171,12 @@ const Insights = () => {
     const topSubPct = Math.round((topSub.monthlyCost / monthlyTotal) * 100);
 
     if (topCat.percentage >= 60) {
-      return `${topCat.category} tools account for ${topCat.percentage}% of your monthly spend — that's ${formatCurrency(topCat.total)}/mo.`;
+      return `${topCat.category} tools account for ${topCat.percentage}% of your monthly spend — that's ${fmt(topCat.total)}/mo.`;
     }
     if (topSubPct >= 50) {
-      return `${topSub.name} is your biggest expense at ${formatCurrency(topSub.monthlyCost)}/mo — ${topSubPct}% of your total.`;
+      return `${topSub.name} is your biggest expense at ${fmt(topSub.monthlyCost)}/mo — ${topSubPct}% of your total.`;
     }
-    return `You're spreading your ${formatCurrency(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
+    return `You're spreading your ${fmt(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
   }, [categoryBreakdown, topSubscriptions, monthlyTotal]);
 
   const handlePeriodChange = useCallback((p: Period) => setPeriod(p), []);
@@ -242,8 +257,8 @@ const Insights = () => {
           <Text className="text-base font-sans-medium text-muted-foreground">
             {period === "monthly" ? "Monthly Spending" : "Yearly Spending"}
           </Text>
-          <Text className="mt-2 text-5xl font-sans-extrabold text-primary tracking-tight">
-            {formatCurrency(animatedTotal)}
+          <Text className="mt-2 text-5xl font-sans-extrabold text-primary tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
+            {fmt(animatedTotal)}
           </Text>
           <View className="mt-3 flex-row items-center gap-2">
             <Text className="text-sm font-sans-medium text-muted-foreground">
@@ -253,7 +268,7 @@ const Insights = () => {
               ·
             </Text>
             <Text className="text-sm font-sans-medium text-muted-foreground">
-              {formatCurrency(avgPerSub)} avg
+              {fmt(avgPerSub)} avg
             </Text>
           </View>
         </View>
@@ -273,8 +288,8 @@ const Insights = () => {
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Yearly
             </Text>
-            <Text className="mt-1 text-lg font-sans-bold text-primary">
-              {formatCurrency(yearlyTotal)}
+            <Text className="mt-1 text-lg font-sans-bold text-primary" numberOfLines={1} adjustsFontSizeToFit>
+              {formatCurrency(yearlyTotal, currency, 0)}
             </Text>
           </View>
           <View
@@ -341,7 +356,7 @@ const Insights = () => {
                       {cat.percentage}%
                     </Text>
                     <Text className="text-base font-sans-bold text-primary min-w-[72] text-right">
-                      {formatCurrency(displayCost)}
+                      {fmt(displayCost)}
                     </Text>
                   </View>
                 </View>
@@ -366,7 +381,7 @@ const Insights = () => {
         <View className="mb-8 gap-4">
           {topSubscriptions.map((sub, i) => {
             const displayCost =
-              period === "monthly" ? sub.monthlyCost : sub.yearlyCost;
+              period === "monthly" ? sub.convertedMonthly : sub.convertedYearly;
             return (
               <View key={sub.id}>
                 <View className="mb-2 flex-row items-center justify-between">
@@ -392,7 +407,7 @@ const Insights = () => {
                     </Text>
                   </View>
                   <Text className="text-base font-sans-bold text-primary">
-                    {formatCurrency(displayCost)}
+                    {fmt(displayCost)}
                     <Text className="text-sm font-sans-medium text-muted-foreground">
                       /{period === "monthly" ? "mo" : "yr"}
                     </Text>
@@ -437,7 +452,7 @@ const Insights = () => {
               subscriptions
             </Text>
             <Text className="mt-3 text-base font-sans-bold text-primary">
-              {formatCurrency(billingBreakdown.monthly.total)}
+              {fmt(billingBreakdown.monthly.total)}
               <Text className="text-xs font-sans-medium text-muted-foreground">
                 /mo
               </Text>
@@ -466,13 +481,13 @@ const Insights = () => {
               subscriptions
             </Text>
             <Text className="mt-3 text-base font-sans-bold text-primary">
-              {formatCurrency(billingBreakdown.yearly.total)}
+              {fmt(billingBreakdown.yearly.total)}
               <Text className="text-xs font-sans-medium text-muted-foreground">
                 /yr
               </Text>
             </Text>
             <Text className="mt-1 text-xs font-sans-medium text-muted-foreground">
-              ({formatCurrency(billingBreakdown.yearly.monthlyEquiv)}/mo equiv)
+              ({fmt(billingBreakdown.yearly.monthlyEquiv)}/mo equiv)
             </Text>
           </View>
         </View>

@@ -6,25 +6,35 @@ import { HOME_BALANCE } from "@/constants/data";
 import images from "@/constants/images";
 import "@/global.css";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
+import { useSettingsStore } from "@/lib/settingsStore";
 import { formatCurrency } from "@/lib/utils";
+import { getExchangeRates, convertSync } from "@/lib/currency";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { LinearGradient } from "expo-linear-gradient";
 import { styled } from "nativewind";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
   const { user } = useUser();
+  const currency = useSettingsStore((s) => s.currency);
+  const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const fmt = (value: number) => formatCurrency(value, currency);
 
   // Get upcoming subscriptions (active subscriptions with renewal date within next 7 days)
   const upcomingSubscriptions = useMemo(() => {
@@ -118,12 +128,13 @@ export default function App() {
               <Text className="home-balance-label">Monthly Spend</Text>
 
               <View className="home-balance-row">
-                <Text className="home-balance-amount">
-                  {formatCurrency(
+                <Text className="home-balance-amount" numberOfLines={1} adjustsFontSizeToFit>
+                  {fmt(
                     subscriptions.reduce(
-                      (sum, sub) =>
-                        sum +
-                        (sub.billing === "Yearly" ? sub.price / 12 : sub.price),
+                      (sum, sub) => {
+                        const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+                        return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
+                      },
                       0,
                     ),
                   )}
@@ -152,13 +163,12 @@ export default function App() {
                 <View className="home-balance-stat">
                   <Text className="home-balance-stat-value">
                     {subscriptions.length > 0
-                      ? formatCurrency(
+                      ? fmt(
                           subscriptions.reduce(
-                            (sum, sub) =>
-                              sum +
-                              (sub.billing === "Yearly"
-                                ? sub.price / 12
-                                : sub.price),
+                            (sum, sub) => {
+                              const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+                              return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
+                            },
                             0,
                           ) / subscriptions.length,
                         )
@@ -168,13 +178,12 @@ export default function App() {
                 </View>
                 <View className="home-balance-stat">
                   <Text className="home-balance-stat-value">
-                    {formatCurrency(
+                    {fmt(
                       subscriptions.reduce(
-                        (sum, sub) =>
-                          sum +
-                          (sub.billing === "Yearly"
-                            ? sub.price
-                            : sub.price * 12),
+                        (sum, sub) => {
+                          const annual = sub.billing === "Yearly" ? sub.price : sub.price * 12;
+                          return sum + convertSync(annual, sub.currency || "USD", currency, rates);
+                        },
                         0,
                       ),
                     )}
@@ -190,11 +199,12 @@ export default function App() {
                   Upcoming
                 </Text>
                 <Text className="text-sm font-sans-medium text-muted-foreground">
-                  {formatCurrency(
+                  {fmt(
                     subscriptions.reduce(
-                      (sum, sub) =>
-                        sum +
-                        (sub.billing === "Yearly" ? sub.price / 12 : sub.price),
+                      (sum, sub) => {
+                        const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+                        return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
+                      },
                       0,
                     ),
                   )}
