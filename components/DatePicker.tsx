@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import clsx from "clsx";
 import dayjs from "dayjs";
-import React, { useMemo, useState } from "react";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import React, { useEffect, useMemo, useState } from "react";
+dayjs.extend(customParseFormat);
 import { Modal, Pressable, Text, View } from "react-native";
 import { useTheme } from "@/lib/useThemeSync";
 
@@ -35,6 +37,14 @@ export default function DatePicker({
 
   const minParsed = minDate ? dayjs(minDate, "MM/DD/YYYY", true) : null;
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    const parsed = dayjs(value, "MM/DD/YYYY", true);
+    if (parsed.isValid()) {
+      setViewMonth(parsed);
+      setSelectedDay(parsed.date());
+    }
+  }, [value]);
 
   const year = viewMonth.year();
   const month = viewMonth.month();

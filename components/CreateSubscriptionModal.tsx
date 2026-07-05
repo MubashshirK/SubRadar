@@ -2,7 +2,9 @@ import { icons } from "@/constants/icons";
 import { Ionicons } from "@expo/vector-icons";
 import clsx from "clsx";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import * as Haptics from "expo-haptics";
+dayjs.extend(customParseFormat);
 import { Image } from "expo-image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Animated, {
@@ -39,12 +41,13 @@ const CATEGORIES: ServiceCategory[] = [
   "AI Tools",
   "Developer Tools",
   "Design",
+  "Finance",
+  "Gaming",
   "Productivity",
   "Cloud Storage",
   "Music",
   "Video",
   "News",
-  "Gaming",
   "Education",
   "Shopping",
   "Communication",
@@ -71,6 +74,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   Other: "#d4d4d4",
 };
 
+function isNumericPrice(value: string): boolean {
+  if (!value.trim()) return false;
+  if (!/^\d+(\.\d+)?$/.test(value.trim())) return false;
+  const parsed = parseFloat(value);
+  return !isNaN(parsed) && parsed > 0;
+}
+
 function formatCurrency(value: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -94,24 +104,40 @@ const CreateSubscriptionModal = ({
   initialSubscription,
 }: CreateSubscriptionModalProps) => {
   const isEditing = !!initialSubscription;
-  const currency = useSettingsStore((s) => s.currency);
-  const currencySymbol = CURRENCIES.find((c) => c.code === currency)?.symbol || "$";
+  const settingsCurrency = useSettingsStore((s) => s.currency);
+  const [subscriptionCurrency, setSubscriptionCurrency] = useState<string | undefined>(
+    initialSubscription?.currency ?? undefined,
+  );
+  const effectiveCurrency = subscriptionCurrency ?? settingsCurrency;
+  const currencySymbol = CURRENCIES.find((c) => c.code === effectiveCurrency)?.symbol || "$";
   const { isDark } = useTheme();
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [frequency, setFrequency] = useState<Frequency>("Monthly");
-  const [category, setCategory] = useState<ServiceCategory>("Other");
-  const [domain, setDomain] = useState("");
+  const [name, setName] = useState(initialSubscription?.name ?? "");
+  const [price, setPrice] = useState(initialSubscription ? String(initialSubscription.price) : "");
+  const [frequency, setFrequency] = useState<Frequency>(
+    (initialSubscription?.frequency as Frequency) ?? "Monthly",
+  );
+  const [category, setCategory] = useState<ServiceCategory>(
+    (initialSubscription?.category as ServiceCategory) ?? "Other",
+  );
+  const [domain, setDomain] = useState(initialSubscription?.domain ?? "");
   const [customDomain, setCustomDomain] = useState("");
   const [showCustomDomain, setShowCustomDomain] = useState(false);
   const [suggestions, setSuggestions] = useState<ServiceEntry[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [plan, setPlan] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [startDateStr, setStartDateStr] = useState(dayjs().format("MM/DD/YYYY"));
-  const [manualRenewalStr, setManualRenewalStr] = useState("");
-  const [renewalManuallyEdited, setRenewalManuallyEdited] = useState(false);
+  const [showDetails, setShowDetails] = useState(isEditing);
+  const [plan, setPlan] = useState(initialSubscription?.plan ?? "");
+  const [paymentMethod, setPaymentMethod] = useState(initialSubscription?.paymentMethod ?? "");
+  const [startDateStr, setStartDateStr] = useState(
+    initialSubscription?.startDate
+      ? dayjs(initialSubscription.startDate).format("MM/DD/YYYY")
+      : dayjs().format("MM/DD/YYYY"),
+  );
+  const [manualRenewalStr, setManualRenewalStr] = useState(
+    initialSubscription?.renewalDate
+      ? dayjs(initialSubscription.renewalDate).format("MM/DD/YYYY")
+      : "",
+  );
+  const [renewalManuallyEdited, setRenewalManuallyEdited] = useState(!!initialSubscription?.renewalDate);
   const nameInputRef = useRef<TextInput>(null);
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -127,16 +153,16 @@ const CreateSubscriptionModal = ({
     transform: [{ translateY: cardTranslateY.value }],
   }));
 
-  const isValidForm = name.trim() !== "" && parseFloat(price) > 0;
+  const isValidForm = name.trim() !== "" && isNumericPrice(price);
 
   const effectiveDomain = domain || customDomain;
 
-  const priceValue = isValidForm ? parseFloat(price) : 0;
+  const priceValue = isNumericPrice(price) ? parseFloat(price) : 0;
 
   const displayCostLabel = useMemo(() => {
     if (!isValidForm) return "";
-    return ` — ${formatCurrency(priceValue, currency)}/${frequency === "Monthly" ? "mo" : "yr"}`;
-  }, [isValidForm, priceValue, frequency, currency]);
+    return ` — ${formatCurrency(priceValue, effectiveCurrency)}/${frequency === "Monthly" ? "mo" : "yr"}`;
+  }, [isValidForm, priceValue, frequency, effectiveCurrency]);
 
   const calculatedRenewal = useMemo(() => {
     const parsed = dayjs(startDateStr, "MM/DD/YYYY", true);
@@ -151,52 +177,11 @@ const CreateSubscriptionModal = ({
     : calculatedRenewal;
 
   useEffect(() => {
-    if (visible) {
-      if (initialSubscription) {
-        setName(initialSubscription.name);
-        setPrice(String(initialSubscription.price));
-        setFrequency((initialSubscription.frequency as Frequency) ?? "Monthly");
-        setCategory((initialSubscription.category as ServiceCategory) ?? "Other");
-        setDomain(initialSubscription.domain ?? "");
-        setPlan(initialSubscription.plan ?? "");
-        setPaymentMethod(initialSubscription.paymentMethod ?? "");
-        if (initialSubscription.startDate) {
-          setStartDateStr(dayjs(initialSubscription.startDate).format("MM/DD/YYYY"));
-        }
-        if (initialSubscription.renewalDate) {
-          const renewal = dayjs(initialSubscription.renewalDate).format("MM/DD/YYYY");
-          setManualRenewalStr(renewal);
-          setRenewalManuallyEdited(true);
-        }
-        setShowDetails(true);
-        setShowCustomDomain(false);
-        setShowSuggestions(false);
-      } else {
-        const timer = setTimeout(() => nameInputRef.current?.focus(), 300);
-        return () => clearTimeout(timer);
-      }
+    if (visible && !initialSubscription) {
+      const timer = setTimeout(() => nameInputRef.current?.focus(), 300);
+      return () => clearTimeout(timer);
     }
   }, [visible, initialSubscription]);
-
-  const resetForm = () => {
-    setName("");
-    setPrice("");
-    setFrequency("Monthly");
-    setCategory("Other");
-    setDomain("");
-    setCustomDomain("");
-    setShowCustomDomain(false);
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setShowDetails(false);
-    setPlan("");
-    setPaymentMethod("");
-    setStartDateStr(dayjs().format("MM/DD/YYYY"));
-    setManualRenewalStr("");
-    setRenewalManuallyEdited(false);
-    setShowStartDatePicker(false);
-    setShowRenewalDatePicker(false);
-  };
 
   useEffect(() => {
     if (visible) {
@@ -206,7 +191,6 @@ const CreateSubscriptionModal = ({
         easing: Easing.out(Easing.cubic),
       });
     } else {
-      resetForm();
       cardTranslateY.value = withTiming(screenHeight, {
         duration: 300,
         easing: Easing.in(Easing.cubic),
@@ -283,13 +267,13 @@ const CreateSubscriptionModal = ({
       id: initialSubscription?.id ?? `sub-${Date.now()}`,
       name: name.trim(),
       price: priceVal,
-      currency,
+      currency: effectiveCurrency,
       frequency,
       category: finalCategory,
       status: "active",
-      startDate: initialSubscription?.startDate ?? finalStartDate.toISOString(),
+      startDate: finalStartDate.toISOString(),
       renewalDate: finalRenewalDate.toISOString(),
-      icon: icons.plus,
+      icon: effectiveDomain ? { uri: getLogoUrl(effectiveDomain, 128) } : icons.plus,
       billing: frequency,
       color: CATEGORY_COLORS[finalCategory] ?? CATEGORY_COLORS.Other,
       domain: finalDomain,
@@ -298,7 +282,6 @@ const CreateSubscriptionModal = ({
     };
 
     onSubmit(newSubscription);
-    resetForm();
     onClose();
   };
 

@@ -259,7 +259,7 @@ const Insights = () => {
 
   if (subscriptions.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-background p-5">
+      <SafeAreaView className="flex-1 bg-background p-5 pb-5">
         <View className="flex-1 items-center justify-center">
           <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
           <Text className="mt-4 text-lg font-sans-semibold text-muted-foreground text-center">
@@ -274,7 +274,7 @@ const Insights = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background pb-5">
       <ScrollView
         contentContainerClassName="px-5 pt-5 pb-30"
         showsVerticalScrollIndicator={false}

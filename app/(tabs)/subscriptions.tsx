@@ -20,6 +20,7 @@ const Subscriptions = () => {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+  const [modalKey, setModalKey] = useState(0);
   const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
   const currency = useSettingsStore((s) => s.currency);
   const { isDark } = useTheme();
@@ -77,14 +78,19 @@ const Subscriptions = () => {
     }
   };
 
-  const handleEditSubscription = (subscription: Subscription) => {
-    setEditingSubscription(subscription);
+  const openModal = (subscription?: Subscription) => {
+    setEditingSubscription(subscription ?? null);
+    setModalKey((k) => k + 1);
     setIsModalVisible(true);
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    openModal(subscription);
     setExpandedId(null);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background pb-5">
       <FlatList
         data={filteredSubscriptions}
         keyExtractor={(item) => item.id}
@@ -96,7 +102,7 @@ const Subscriptions = () => {
                 Subscriptions
               </Text>
               <Pressable
-                onPress={() => setIsModalVisible(true)}
+                onPress={() => openModal()}
                 className="size-10 items-center justify-center rounded-full bg-muted"
               >
                 <Ionicons name="add" size={20} color={isDark ? "#ededed" : "#191919"} />
@@ -201,6 +207,7 @@ const Subscriptions = () => {
       />
 
       <CreateSubscriptionModal
+        key={`sub-modal-${modalKey}`}
         visible={isModalVisible}
         onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
         onSubmit={handleSubmitSubscription}

@@ -1,3 +1,11 @@
+import { getExchangeRates } from "@/lib/currency";
+import {
+  CURRENCIES,
+  type CurrencyCode,
+  type CurrencyEntry,
+} from "@/lib/settingsStore";
+import { useTheme } from "@/lib/useThemeSync";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -9,14 +17,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  CURRENCIES,
-  type CurrencyCode,
-  type CurrencyEntry,
-} from "@/lib/settingsStore";
-import { getExchangeRates } from "@/lib/currency";
-import { useTheme } from "@/lib/useThemeSync";
 
 type CurrencyPickerSheetProps = {
   visible: boolean;
@@ -120,11 +120,15 @@ export default function CurrencyPickerSheet({
               onPress={onClose}
               className="size-8 items-center justify-center rounded-full bg-muted"
             >
-              <Ionicons name="close" size={16} color={isDark ? "#888" : "#666"} />
+              <Ionicons
+                name="close"
+                size={16}
+                color={isDark ? "#888" : "#666"}
+              />
             </Pressable>
           </View>
 
-{/* List */}
+          {/* List */}
           <SectionList
             sections={filtered}
             keyExtractor={(item) => item.code}
@@ -132,10 +136,22 @@ export default function CurrencyPickerSheet({
             keyboardShouldPersistTaps="handled"
             ListHeaderComponent={
               <View className="mx-6 mt-4 flex-row items-center gap-2 rounded-xl border border-input bg-muted px-3.5 py-2.5">
-                <Ionicons name="search-outline" size={16} color={isDark ? "rgba(237, 237, 237, 0.4)" : "rgba(55, 53, 47, 0.4)"} />
+                <Ionicons
+                  name="search-outline"
+                  size={16}
+                  color={
+                    isDark
+                      ? "rgba(237, 237, 237, 0.4)"
+                      : "rgba(55, 53, 47, 0.4)"
+                  }
+                />
                 <TextInput
                   className="min-w-0 flex-1 text-[15px] font-sans-medium text-primary"
-                  placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
+                  placeholderTextColor={
+                    isDark
+                      ? "rgba(237, 237, 237, 0.35)"
+                      : "rgba(55, 53, 47, 0.35)"
+                  }
                   placeholder="Search currencies…"
                   value={query}
                   onChangeText={setQuery}
@@ -145,7 +161,15 @@ export default function CurrencyPickerSheet({
                 />
                 {query.length > 0 && (
                   <Pressable onPress={() => setQuery("")}>
-                    <Ionicons name="close-circle" size={16} color={isDark ? "rgba(237, 237, 237, 0.3)" : "rgba(55, 53, 47, 0.3)"} />
+                    <Ionicons
+                      name="close-circle"
+                      size={16}
+                      color={
+                        isDark
+                          ? "rgba(237, 237, 237, 0.3)"
+                          : "rgba(55, 53, 47, 0.3)"
+                      }
+                    />
                   </Pressable>
                 )}
               </View>
@@ -179,7 +203,11 @@ export default function CurrencyPickerSheet({
                   {/* Flag */}
                   <View
                     className={`size-9 items-center justify-center rounded-lg ${
-                      isSelected ? "bg-accent/15" : isDark ? "bg-[#333333]" : "bg-[#f0f0f0]"
+                      isSelected
+                        ? "bg-accent/15"
+                        : isDark
+                          ? "bg-[#333333]"
+                          : "bg-[#f0f0f0]"
                     }`}
                   >
                     <Text className="text-xl">{c.flag}</Text>
@@ -206,7 +234,11 @@ export default function CurrencyPickerSheet({
                       <Ionicons
                         name="checkmark-circle"
                         size={18}
-                        color="#2f6fed"
+                        color="#06960d"
+                        style={{
+                          marginLeft: 2,
+                          paddingTop: 4,
+                        }}
                       />
                     )}
                   </View>

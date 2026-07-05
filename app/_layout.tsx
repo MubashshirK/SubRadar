@@ -4,7 +4,7 @@ import { tokenCache } from "@clerk/expo/token-cache";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
-import { useThemeSync, ThemeProvider } from "@/lib/useThemeSync";
+import { ThemeProvider } from "@/lib/useThemeSync";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -17,8 +17,6 @@ if (!publishableKey) {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  useThemeSync();
-
   const [fontsLoaded] = useFonts({
     "sans-regular": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
     "sans-bold": require("../assets/fonts/PlusJakartaSans-Bold.ttf"),

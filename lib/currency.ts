@@ -10,17 +10,17 @@ interface CachedRates {
   rates: Record<string, number>;
 }
 
-let inMemoryRates: Record<string, number> | null = null;
+let inMemoryRates: CachedRates | null = null;
 
-async function loadCached(): Promise<Record<string, number> | null> {
+async function loadCached(): Promise<CachedRates | null> {
   if (inMemoryRates) return inMemoryRates;
   try {
     const raw = await SecureStore.getItemAsync(CACHE_KEY);
     if (!raw) return null;
     const parsed: CachedRates = JSON.parse(raw);
     if (!parsed.rates || !parsed.rates.USD) return null;
-    inMemoryRates = parsed.rates;
-    return parsed.rates;
+    inMemoryRates = parsed;
+    return parsed;
   } catch {
     return null;
   }
@@ -44,17 +44,8 @@ export async function getExchangeRates(): Promise<Record<string, number>> {
   const cached = await loadCached();
   const now = Date.now();
 
-  // Return cached rates if still fresh
-  if (cached) {
-    try {
-      const raw = await SecureStore.getItemAsync(CACHE_KEY);
-      if (raw) {
-        const parsed: CachedRates = JSON.parse(raw);
-        if (now - parsed.timestamp < CACHE_TTL_MS) return cached;
-      }
-    } catch {
-      return cached;
-    }
+  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+    return cached.rates;
   }
 
   try {

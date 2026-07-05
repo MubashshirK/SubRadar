@@ -1,11 +1,11 @@
-const LOGO_DEV_TOKEN = process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN!;
-
-if (!LOGO_DEV_TOKEN) {
-  throw new Error("Missing EXPO_PUBLIC_LOGO_DEV_TOKEN in .env");
-}
+import { type ServiceCategory } from "./settingsStore";
 
 export function getLogoUrl(domain: string, size = 128): string {
-  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=${size}&retina=true&format=png&fallback=monogram`;
+  const token = process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN;
+  if (!token) {
+    throw new Error("Missing EXPO_PUBLIC_LOGO_DEV_TOKEN in .env");
+  }
+  return `https://img.logo.dev/${domain}?token=${token}&size=${size}&retina=true&format=png&fallback=monogram`;
 }
 
 export interface ServiceEntry {
@@ -14,23 +14,7 @@ export interface ServiceEntry {
   category: ServiceCategory;
 }
 
-export type ServiceCategory =
-  | "Entertainment"
-  | "AI Tools"
-  | "Developer Tools"
-  | "Design"
-  | "Productivity"
-  | "Cloud Storage"
-  | "Music"
-  | "Video"
-  | "News"
-  | "Gaming"
-  | "Education"
-  | "Finance"
-  | "Shopping"
-  | "Communication"
-  | "Security"
-  | "Other";
+export type { ServiceCategory } from "./settingsStore";
 
 export const POPULAR_SERVICES: ServiceEntry[] = [
   { name: "Netflix", domain: "netflix.com", category: "Entertainment" },

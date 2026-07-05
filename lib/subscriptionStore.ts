@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { secureStorage } from "./storage";
 import type { ImageSourcePropType } from "react-native";
+import { getLogoUrl } from "./logo";
 
 type SubscriptionPersist = Omit<Subscription, "icon"> & { icon?: null };
 
@@ -17,7 +18,7 @@ interface SubscriptionStore {
 
 function resolveIcon(domain?: string): ImageSourcePropType {
   if (domain) {
-    return { uri: `https://img.logo.dev/${domain}?token=${process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN}&size=128&retina=true&format=png&fallback=monogram` };
+    return { uri: getLogoUrl(domain, 128) };
   }
   return icons.plus;
 }

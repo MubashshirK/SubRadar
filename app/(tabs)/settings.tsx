@@ -136,7 +136,7 @@ const Settings = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background pb-5">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5 pb-32 pt-6"
@@ -277,7 +277,6 @@ const Settings = () => {
               iconColor="#191919"
               iconBg="#efefed"
               label="Dark mode"
-              description={themeModeLabel[themeMode]}
               rightElement={
                 <View className="flex-row items-center gap-1.5">
                   <Text className="text-[13px] font-sans-medium text-muted-foreground">

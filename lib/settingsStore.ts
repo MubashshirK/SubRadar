@@ -42,6 +42,8 @@ export const DEFAULT_CATEGORIES = [
   "Other",
 ] as const;
 
+export type ServiceCategory = typeof DEFAULT_CATEGORIES[number];
+
 export type ThemeMode = "system" | "light" | "dark";
 
 interface SettingsState {

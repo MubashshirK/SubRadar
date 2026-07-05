@@ -27,14 +27,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateScheme = useCallback(() => {
-    const resolved = themeMode === "system"
-      ? Appearance.getColorScheme()
-      : themeMode;
-    setResolvedScheme(resolved);
-
     if (themeMode === "system") {
-      Appearance.setColorScheme(null);
+      Appearance.setColorScheme('unspecified');
+      const resolved = Appearance.getColorScheme();
+      setResolvedScheme(resolved);
     } else {
+      setResolvedScheme(themeMode);
       Appearance.setColorScheme(themeMode);
     }
   }, [themeMode]);
@@ -63,13 +61,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useThemeSync() {
-  const themeMode = useSettingsStore((s) => s.themeMode);
-
-  useEffect(() => {
-    if (themeMode === "system") {
-      Appearance.setColorScheme(null);
-    } else {
-      Appearance.setColorScheme(themeMode);
-    }
-  }, [themeMode]);
+  // Side-effect moved to ThemeProvider so this is now a no-op wrapper.
+  // Kept for backward compatibility with any direct imports.
 }

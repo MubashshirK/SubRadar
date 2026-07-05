@@ -58,7 +58,7 @@ const SubscriptionCard = ({
   const smartStatus = getSmartStatusLabel(status, renewalDate);
   const monthsActive = getMonthsActive(startDate);
   const daysUntilRenewal = getDaysUntilRenewal(renewalDate);
-  const totalSpent = monthsActive > 0 ? price * monthsActive : price;
+  const totalSpent = monthsActive > 0 ? monthlyEquiv * monthsActive : monthlyEquiv;
   const monthlyEquiv = billing === "Yearly" ? price / 12 : price;
 
   const displayMeta = category?.trim() || plan?.trim() || "";

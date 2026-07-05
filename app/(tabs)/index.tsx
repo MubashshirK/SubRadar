@@ -25,15 +25,20 @@ export default function App() {
   const currency = useSettingsStore((s) => s.currency);
   const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [ratesLoaded, setRatesLoaded] = useState(false);
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+  const [modalKey, setModalKey] = useState(0);
   const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
 
   useEffect(() => {
-    getExchangeRates().then(setRates);
+    getExchangeRates().then((r) => {
+      setRates(r);
+      setRatesLoaded(true);
+    });
   }, []);
 
   const fmt = (value: number) => formatCurrency(value, currency);
@@ -78,9 +83,14 @@ export default function App() {
     }
   };
 
-  const handleEditSubscription = (subscription: Subscription) => {
-    setEditingSubscription(subscription);
+  const openModal = (subscription?: Subscription) => {
+    setEditingSubscription(subscription ?? null);
+    setModalKey((k) => k + 1);
     setIsModalVisible(true);
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    openModal(subscription);
     setExpandedSubscriptionId(null);
   };
 
@@ -113,7 +123,7 @@ export default function App() {
               </View>
 
               <Pressable
-                onPress={() => setIsModalVisible(true)}
+                onPress={() => openModal()}
                 className="size-10 items-center justify-center rounded-full bg-muted"
               >
                 <Ionicons name="add" size={20} color={isDark ? "#ededed" : "#191919"} />
@@ -145,7 +155,11 @@ export default function App() {
                   <Text className="home-balance-date">
                     {dayjs(
                       subscriptions
-                        .filter((s) => s.renewalDate)
+                        .filter(
+                          (s) =>
+                            s.renewalDate &&
+                            dayjs(s.renewalDate).isAfter(dayjs()),
+                        )
                         .sort((a, b) =>
                           dayjs(a.renewalDate!).diff(dayjs(b.renewalDate!)),
                         )[0]?.renewalDate ?? HOME_BALANCE.nextRenewalDate,
@@ -174,7 +188,7 @@ export default function App() {
                             0,
                           ) / subscriptions.length,
                         )
-                      : "$0.00"}
+                      : ratesLoaded ? fmt(0) : "—"}
                   </Text>
                   <Text className="home-balance-stat-label">Avg / sub</Text>
                 </View>
@@ -254,6 +268,7 @@ export default function App() {
       />
 
       <CreateSubscriptionModal
+        key={`sub-modal-${modalKey}`}
         visible={isModalVisible}
         onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
         onSubmit={handleCreateSubscription}
