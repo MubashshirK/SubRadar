@@ -1,17 +1,28 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  Image,
-} from "react-native";
-import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
-import { styled } from "nativewind";
+import { convertSync, getExchangeRates } from "@/lib/currency";
+import { getLogoUrl } from "@/lib/logo";
+import { useSettingsStore } from "@/lib/settingsStore";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
 import { formatCurrency } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
-import clsx from "clsx";
+import { clsx } from "clsx";
+import { Image } from "expo-image";
+import { styled } from "nativewind";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  LayoutChangeEvent,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -26,7 +37,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 const FALLBACK_COLORS = ["#e03e3e", "#ea7a53", "#d97706", "#6366f1"];
 
 function getCategoryColor(category: string, index: number): string {
-  return CATEGORY_COLORS[category] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+  return (
+    CATEGORY_COLORS[category] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+  );
 }
 
 function useAnimatedNumber(target: number, duration = 800) {
@@ -53,23 +66,75 @@ function useAnimatedNumber(target: number, duration = 800) {
 
 const Insights = () => {
   const { subscriptions } = useSubscriptionStore();
+  const currency = useSettingsStore((s) => s.currency);
   const [period, setPeriod] = useState<Period>("monthly");
+  const [rates, setRates] = useState<Record<string, number>>({});
+
+  const pillWidth = useSharedValue(0);
+  const pillTranslateX = useSharedValue(0);
+  const monthlyRef = useRef<View>(null);
+  const yearlyRef = useRef<View>(null);
+  const measuresRef = useRef({
+    monthly: { x: 0, w: 0 },
+    yearly: { x: 0, w: 0 },
+  });
+
+  const handlePeriodChange = useCallback(
+    (p: Period) => {
+      setPeriod(p);
+      const m = measuresRef.current[p];
+      if (m && m.w > 0) {
+        const SPRING = { damping: 100, stiffness: 1800 };
+        pillWidth.value = withSpring(m.w, SPRING);
+        pillTranslateX.value = withSpring(m.x, SPRING);
+      }
+    },
+    [pillWidth, pillTranslateX],
+  );
+
+  const handleMonthlyLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      const { x, width } = e.nativeEvent.layout;
+      measuresRef.current.monthly = { x, w: width };
+      if (period === "monthly") {
+        pillWidth.value = width;
+        pillTranslateX.value = x;
+      }
+    },
+    [period, pillWidth, pillTranslateX],
+  );
+
+  const handleYearlyLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      const { x, width } = e.nativeEvent.layout;
+      measuresRef.current.yearly = { x, w: width };
+      if (period === "yearly") {
+        pillWidth.value = width;
+        pillTranslateX.value = x;
+      }
+    },
+    [period, pillWidth, pillTranslateX],
+  );
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const fmt = useCallback((value: number) => formatCurrency(value, currency), [currency]);
 
   const monthlyTotal = useMemo(() => {
     return subscriptions.reduce((sum, sub) => {
-      const monthly =
-        sub.billing === "Yearly" ? sub.price / 12 : sub.price;
-      return sum + monthly;
+      const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+      return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
     }, 0);
-  }, [subscriptions]);
+  }, [subscriptions, rates, currency]);
 
   const yearlyTotal = useMemo(() => {
     return subscriptions.reduce((sum, sub) => {
-      const annual =
-        sub.billing === "Yearly" ? sub.price : sub.price * 12;
-      return sum + annual;
+      const annual = sub.billing === "Yearly" ? sub.price : sub.price * 12;
+      return sum + convertSync(annual, sub.currency || "USD", currency, rates);
     }, 0);
-  }, [subscriptions]);
+  }, [subscriptions, rates, currency]);
 
   const activeSubCount = useMemo(
     () => subscriptions.filter((s) => s.status === "active").length,
@@ -84,7 +149,16 @@ const Insights = () => {
     const map = new Map<string, number>();
     for (const sub of subscriptions) {
       const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
-      map.set(sub.category ?? "Other", (map.get(sub.category ?? "Other") ?? 0) + monthly);
+      const converted = convertSync(
+        monthly,
+        sub.currency || "USD",
+        currency,
+        rates,
+      );
+      map.set(
+        sub.category ?? "Other",
+        (map.get(sub.category ?? "Other") ?? 0) + converted,
+      );
     }
     const max = Math.max(...map.values(), 1);
     return Array.from(map.entries())
@@ -92,31 +166,46 @@ const Insights = () => {
         category,
         total,
         yearlyTotal: total * 12,
-        percentage: Math.round((total / monthlyTotal) * 100),
+        percentage:
+          monthlyTotal > 0 ? Math.round((total / monthlyTotal) * 100) : 0,
         barWidth: total / max,
         color: getCategoryColor(category, i),
       }))
       .sort((a, b) => b.total - a.total);
-  }, [subscriptions, monthlyTotal]);
+  }, [subscriptions, monthlyTotal, rates, currency]);
 
   const topSubscriptions = useMemo(() => {
-    const max = Math.max(...subscriptions.map((s) => s.price), 1);
-    return [...subscriptions]
-      .sort((a, b) => {
-        const aMonthly = a.billing === "Yearly" ? a.price / 12 : a.price;
-        const bMonthly = b.billing === "Yearly" ? b.price / 12 : b.price;
-        return bMonthly - aMonthly;
-      })
-      .map((sub) => {
-        const monthlyCost = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
-        return {
-          ...sub,
-          monthlyCost,
-          yearlyCost: sub.billing === "Yearly" ? sub.price : sub.price * 12,
-          barWidth: monthlyCost / max,
-        };
-      });
-  }, [subscriptions]);
+    const converted = subscriptions.map((sub) => {
+      const monthlyCost = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+      const convertedMonthly = convertSync(
+        monthlyCost,
+        sub.currency || "USD",
+        currency,
+        rates,
+      );
+      const yearlyCost = sub.billing === "Yearly" ? sub.price : sub.price * 12;
+      const convertedYearly = convertSync(
+        yearlyCost,
+        sub.currency || "USD",
+        currency,
+        rates,
+      );
+      return {
+        ...sub,
+        monthlyCost: convertedMonthly,
+        convertedMonthly,
+        yearlyCost: convertedYearly,
+        convertedYearly,
+      };
+    });
+    const max = Math.max(...converted.map((s) => s.convertedMonthly), 1);
+    return converted
+      .sort((a, b) => b.convertedMonthly - a.convertedMonthly)
+      .map((sub) => ({
+        ...sub,
+        barWidth: sub.convertedMonthly / max,
+      }));
+  }, [subscriptions, rates, currency]);
 
   const billingBreakdown = useMemo(() => {
     let monthlyCount = 0;
@@ -126,17 +215,31 @@ const Insights = () => {
     for (const sub of subscriptions) {
       if (sub.billing === "Yearly") {
         yearlyCount++;
-        yearlyCost += sub.price;
+        yearlyCost += convertSync(
+          sub.price,
+          sub.currency || "USD",
+          currency,
+          rates,
+        );
       } else {
         monthlyCount++;
-        monthlyCost += sub.price;
+        monthlyCost += convertSync(
+          sub.price,
+          sub.currency || "USD",
+          currency,
+          rates,
+        );
       }
     }
     return {
       monthly: { count: monthlyCount, total: monthlyCost },
-      yearly: { count: yearlyCount, total: yearlyCost, monthlyEquiv: yearlyCost / 12 },
+      yearly: {
+        count: yearlyCount,
+        total: yearlyCost,
+        monthlyEquiv: yearlyCost / 12,
+      },
     };
-  }, [subscriptions]);
+  }, [subscriptions, rates, currency]);
 
   const smartInsight = useMemo(() => {
     if (categoryBreakdown.length === 0) return null;
@@ -146,19 +249,17 @@ const Insights = () => {
     const topSubPct = Math.round((topSub.monthlyCost / monthlyTotal) * 100);
 
     if (topCat.percentage >= 60) {
-      return `${topCat.category} tools account for ${topCat.percentage}% of your monthly spend — that's ${formatCurrency(topCat.total)}/mo.`;
+      return `${topCat.category} tools account for ${topCat.percentage}% of your monthly spend — that's ${fmt(topCat.total)}/mo.`;
     }
     if (topSubPct >= 50) {
-      return `${topSub.name} is your biggest expense at ${formatCurrency(topSub.monthlyCost)}/mo — ${topSubPct}% of your total.`;
+      return `${topSub.name} is your biggest expense at ${fmt(topSub.monthlyCost)}/mo — ${topSubPct}% of your total.`;
     }
-    return `You're spreading your ${formatCurrency(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
-  }, [categoryBreakdown, topSubscriptions, monthlyTotal]);
-
-  const handlePeriodChange = useCallback((p: Period) => setPeriod(p), []);
+    return `You're spreading your ${fmt(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
+  }, [categoryBreakdown, topSubscriptions, monthlyTotal, fmt]);
 
   if (subscriptions.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-background p-5">
+      <SafeAreaView className="flex-1 bg-background p-5 pb-5">
         <View className="flex-1 items-center justify-center">
           <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
           <Text className="mt-4 text-lg font-sans-semibold text-muted-foreground text-center">
@@ -173,7 +274,7 @@ const Insights = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background pb-5">
       <ScrollView
         contentContainerClassName="px-5 pt-5 pb-30"
         showsVerticalScrollIndicator={false}
@@ -182,18 +283,35 @@ const Insights = () => {
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-3xl font-sans-bold text-primary">Insights</Text>
 
-          <View className="flex-row rounded-full bg-muted p-0.5">
+          <View
+            className="flex-row rounded-full bg-white dark:bg-[#1a1a1a] p-0.5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
+            <Animated.View
+              className="absolute rounded-full bg-primary inset-y-0.5"
+              style={{
+                width: pillWidth,
+                transform: [{ translateX: pillTranslateX }],
+              }}
+            />
             <Pressable
               onPress={() => handlePeriodChange("monthly")}
-              className={clsx(
-                "rounded-full px-4 py-2",
-                period === "monthly" ? "bg-primary" : "bg-transparent",
-              )}
+              onLayout={handleMonthlyLayout}
+              ref={monthlyRef}
+              className="rounded-full px-4 py-2"
             >
               <Text
                 className={clsx(
                   "text-sm font-sans-semibold",
-                  period === "monthly" ? "text-white" : "text-muted-foreground",
+                  period === "monthly"
+                    ? "text-white dark:text-black"
+                    : "text-muted-foreground",
                 )}
               >
                 Monthly
@@ -201,15 +319,16 @@ const Insights = () => {
             </Pressable>
             <Pressable
               onPress={() => handlePeriodChange("yearly")}
-              className={clsx(
-                "rounded-full px-4 py-2",
-                period === "yearly" ? "bg-primary" : "bg-transparent",
-              )}
+              onLayout={handleYearlyLayout}
+              ref={yearlyRef}
+              className="rounded-full px-4 py-2"
             >
               <Text
                 className={clsx(
                   "text-sm font-sans-semibold",
-                  period === "yearly" ? "text-white" : "text-muted-foreground",
+                  period === "yearly"
+                    ? "text-white dark:text-black"
+                    : "text-muted-foreground",
                 )}
               >
                 Yearly
@@ -223,8 +342,12 @@ const Insights = () => {
           <Text className="text-base font-sans-medium text-muted-foreground">
             {period === "monthly" ? "Monthly Spending" : "Yearly Spending"}
           </Text>
-          <Text className="mt-2 text-5xl font-sans-extrabold text-primary tracking-tight">
-            {formatCurrency(animatedTotal)}
+          <Text
+            className="mt-2 text-5xl font-sans-extrabold text-primary tracking-tight"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {fmt(animatedTotal)}
           </Text>
           <View className="mt-3 flex-row items-center gap-2">
             <Text className="text-sm font-sans-medium text-muted-foreground">
@@ -234,22 +357,44 @@ const Insights = () => {
               ·
             </Text>
             <Text className="text-sm font-sans-medium text-muted-foreground">
-              {formatCurrency(avgPerSub)} avg
+              {fmt(avgPerSub)} avg
             </Text>
           </View>
         </View>
 
         {/* Stats Row */}
         <View className="mb-8 flex-row gap-3">
-          <View className="flex-1 items-center rounded-2xl bg-card p-4">
+          <View
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Yearly
             </Text>
-            <Text className="mt-1 text-lg font-sans-bold text-primary">
-              {formatCurrency(yearlyTotal)}
+            <Text
+              className="mt-1 text-lg font-sans-bold text-primary"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {formatCurrency(yearlyTotal, currency, 0)}
             </Text>
           </View>
-          <View className="flex-1 items-center rounded-2xl bg-card p-4">
+          <View
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Active
             </Text>
@@ -257,11 +402,23 @@ const Insights = () => {
               {activeSubCount}
             </Text>
           </View>
-          <View className="flex-1 items-center rounded-2xl bg-card p-4">
+          <View
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Top Category
             </Text>
-            <Text className="mt-1 text-lg font-sans-bold text-primary" numberOfLines={1}>
+            <Text
+              className="mt-1 text-lg font-sans-bold text-primary"
+              numberOfLines={1}
+            >
               {categoryBreakdown[0]?.category ?? "—"}
             </Text>
           </View>
@@ -273,7 +430,8 @@ const Insights = () => {
         </Text>
         <View className="mb-8 gap-4">
           {categoryBreakdown.map((cat) => {
-            const displayCost = period === "monthly" ? cat.total : cat.yearlyTotal;
+            const displayCost =
+              period === "monthly" ? cat.total : cat.yearlyTotal;
             return (
               <View key={cat.category}>
                 <View className="mb-2 flex-row items-center justify-between">
@@ -291,7 +449,7 @@ const Insights = () => {
                       {cat.percentage}%
                     </Text>
                     <Text className="text-base font-sans-bold text-primary min-w-[72] text-right">
-                      {formatCurrency(displayCost)}
+                      {fmt(displayCost)}
                     </Text>
                   </View>
                 </View>
@@ -316,7 +474,7 @@ const Insights = () => {
         <View className="mb-8 gap-4">
           {topSubscriptions.map((sub, i) => {
             const displayCost =
-              period === "monthly" ? sub.monthlyCost : sub.yearlyCost;
+              period === "monthly" ? sub.convertedMonthly : sub.convertedYearly;
             return (
               <View key={sub.id}>
                 <View className="mb-2 flex-row items-center justify-between">
@@ -324,13 +482,25 @@ const Insights = () => {
                     <Text className="w-6 text-base font-sans-bold text-muted-foreground text-center">
                       #{i + 1}
                     </Text>
-                    <Image source={sub.icon} className="size-8 rounded-md" />
+                    {sub.domain ? (
+                      <Image
+                        source={getLogoUrl(sub.domain, 128)}
+                        style={{ width: 32, height: 32, borderRadius: 8 }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <Image
+                        source={sub.icon}
+                        style={{ width: 32, height: 32, borderRadius: 8 }}
+                        contentFit="cover"
+                      />
+                    )}
                     <Text className="text-base font-sans-semibold text-primary">
                       {sub.name}
                     </Text>
                   </View>
                   <Text className="text-base font-sans-bold text-primary">
-                    {formatCurrency(displayCost)}
+                    {fmt(displayCost)}
                     <Text className="text-sm font-sans-medium text-muted-foreground">
                       /{period === "monthly" ? "mo" : "yr"}
                     </Text>
@@ -352,7 +522,16 @@ const Insights = () => {
           Billing Overview
         </Text>
         <View className="mb-8 flex-row gap-3">
-          <View className="flex-1 rounded-2xl bg-card p-4">
+          <View
+            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="repeat-outline" size={16} color="#2f6fed" />
               <Text className="text-xs font-sans-semibold text-muted-foreground">
@@ -366,13 +545,22 @@ const Insights = () => {
               subscriptions
             </Text>
             <Text className="mt-3 text-base font-sans-bold text-primary">
-              {formatCurrency(billingBreakdown.monthly.total)}
+              {fmt(billingBreakdown.monthly.total)}
               <Text className="text-xs font-sans-medium text-muted-foreground">
                 /mo
               </Text>
             </Text>
           </View>
-          <View className="flex-1 rounded-2xl bg-card p-4">
+          <View
+            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="calendar-outline" size={16} color="#0f7b6c" />
               <Text className="text-xs font-sans-semibold text-muted-foreground">
@@ -386,20 +574,29 @@ const Insights = () => {
               subscriptions
             </Text>
             <Text className="mt-3 text-base font-sans-bold text-primary">
-              {formatCurrency(billingBreakdown.yearly.total)}
+              {fmt(billingBreakdown.yearly.total)}
               <Text className="text-xs font-sans-medium text-muted-foreground">
                 /yr
               </Text>
             </Text>
             <Text className="mt-1 text-xs font-sans-medium text-muted-foreground">
-              ({formatCurrency(billingBreakdown.yearly.monthlyEquiv)}/mo equiv)
+              ({fmt(billingBreakdown.yearly.monthlyEquiv)}/mo equiv)
             </Text>
           </View>
         </View>
 
         {/* Smart Insight */}
         {smartInsight && (
-          <View className="mb-6 flex-row gap-3 rounded-2xl bg-card p-5">
+          <View
+            className="mb-6 flex-row gap-3 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
             <View className="mt-0.5 h-5 w-1 rounded-full bg-accent" />
             <View className="flex-1">
               <Text className="text-xs font-sans-semibold uppercase tracking-wider text-accent mb-2">

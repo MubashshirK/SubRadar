@@ -1,0 +1,66 @@
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { Appearance, ColorSchemeName } from "react-native";
+import { useSettingsStore } from "./settingsStore";
+
+export type Theme = "light" | "dark";
+
+interface ThemeContextValue {
+  theme: Theme;
+  isDark: boolean;
+  resolvedScheme: ColorSchemeName;
+}
+
+const ThemeContext = createContext<ThemeContextValue>({
+  theme: "light",
+  isDark: false,
+  resolvedScheme: Appearance.getColorScheme(),
+});
+
+export function useTheme(): ThemeContextValue {
+  return useContext(ThemeContext);
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const themeMode = useSettingsStore((s) => s.themeMode);
+  const [resolvedScheme, setResolvedScheme] = useState<ColorSchemeName>(
+    Appearance.getColorScheme()
+  );
+
+  const updateScheme = useCallback(() => {
+    if (themeMode === "system") {
+      Appearance.setColorScheme('unspecified');
+      const resolved = Appearance.getColorScheme();
+      setResolvedScheme(resolved);
+    } else {
+      setResolvedScheme(themeMode);
+      Appearance.setColorScheme(themeMode);
+    }
+  }, [themeMode]);
+
+  useEffect(() => {
+    updateScheme();
+  }, [updateScheme]);
+
+  useEffect(() => {
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      if (themeMode === "system") {
+        setResolvedScheme(colorScheme);
+      }
+    });
+    return () => subscription.remove();
+  }, [themeMode]);
+
+  const theme: Theme = resolvedScheme === "dark" ? "dark" : "light";
+  const isDark = theme === "dark";
+
+  return (
+    <ThemeContext.Provider value={{ theme, isDark, resolvedScheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useThemeSync() {
+  // Side-effect moved to ThemeProvider so this is now a no-op wrapper.
+  // Kept for backward compatibility with any direct imports.
+}

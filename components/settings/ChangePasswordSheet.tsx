@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import Sheet from "./Sheet";
+import { useTheme } from "@/lib/useThemeSync";
 
 type Props = {
   visible: boolean;
@@ -17,6 +18,7 @@ type Props = {
 
 export default function ChangePasswordSheet({ visible, onClose }: Props) {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -89,10 +91,10 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
             Your password has been changed successfully.
           </Text>
           <Pressable
-            className="mt-6 w-full items-center rounded-full bg-primary py-4"
+            className="mt-6 w-full items-center rounded-full bg-primary dark:bg-foreground py-4"
             onPress={onClose}
           >
-            <Text className="text-[15px] font-sans-bold text-white">
+            <Text className="text-[15px] font-sans-bold text-white dark:text-background">
               Done
             </Text>
           </Pressable>
@@ -108,10 +110,10 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
         <Text className="mb-2 text-[13px] font-sans-semibold text-primary">
           Current password
         </Text>
-        <View className="flex-row items-center rounded-xl border border-[#e5e5e5] bg-white px-4">
+        <View className="flex-row items-center rounded-xl border border-input bg-background px-4">
           <TextInput
             className="min-h-[48px] flex-1 text-[15px] font-sans-medium text-primary"
-            placeholderTextColor="rgba(55, 53, 47, 0.35)"
+            placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
             value={currentPassword}
             onChangeText={setCurrentPassword}
             placeholder="Enter current password"
@@ -133,10 +135,10 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
         <Text className="mb-2 text-[13px] font-sans-semibold text-primary">
           New password
         </Text>
-        <View className="flex-row items-center rounded-xl border border-[#e5e5e5] bg-white px-4">
+        <View className="flex-row items-center rounded-xl border border-input bg-background px-4">
           <TextInput
             className="min-h-[48px] flex-1 text-[15px] font-sans-medium text-primary"
-            placeholderTextColor="rgba(55, 53, 47, 0.35)"
+            placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
             value={newPassword}
             onChangeText={setNewPassword}
             placeholder="Min. 8 characters"
@@ -158,10 +160,10 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
         <Text className="mb-2 text-[13px] font-sans-semibold text-primary">
           Confirm new password
         </Text>
-        <View className="flex-row items-center rounded-xl border border-[#e5e5e5] bg-white px-4">
+        <View className="flex-row items-center rounded-xl border border-input bg-background px-4">
           <TextInput
             className="min-h-[48px] flex-1 text-[15px] font-sans-medium text-primary"
-            placeholderTextColor="rgba(55, 53, 47, 0.35)"
+            placeholderTextColor={isDark ? "rgba(237, 237, 237, 0.35)" : "rgba(55, 53, 47, 0.35)"}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Re-enter new password"
@@ -190,14 +192,14 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
 
       {/* Update button */}
       <Pressable
-        className={`mt-2 items-center rounded-full bg-primary py-4 ${loading ? "opacity-60" : ""}`}
+        className={`mt-2 items-center rounded-full bg-primary dark:bg-foreground py-4 ${loading ? "opacity-60" : ""}`}
         onPress={handleUpdate}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator size="small" color="white" />
         ) : (
-          <Text className="text-[15px] font-sans-bold text-white">
+          <Text className="text-[15px] font-sans-bold text-white dark:text-background">
             Update password
           </Text>
         )}

@@ -3,26 +3,45 @@ import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import { HOME_BALANCE } from "@/constants/data";
-import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
 import { useSubscriptionStore } from "@/lib/subscriptionStore";
+import { useSettingsStore } from "@/lib/settingsStore";
 import { formatCurrency } from "@/lib/utils";
+import { getExchangeRates, convertSync } from "@/lib/currency";
 import { useUser } from "@clerk/expo";
+import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { LinearGradient } from "expo-linear-gradient";
 import { styled } from "nativewind";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/lib/useThemeSync";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
   const { user } = useUser();
+  const currency = useSettingsStore((s) => s.currency);
+  const { isDark } = useTheme();
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const [ratesLoaded, setRatesLoaded] = useState(false);
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const { subscriptions, addSubscription } = useSubscriptionStore();
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+  const [modalKey, setModalKey] = useState(0);
+  const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
+
+  useEffect(() => {
+    getExchangeRates().then((r) => {
+      setRates(r);
+      setRatesLoaded(true);
+    });
+  }, []);
+
+  const fmt = (value: number) => formatCurrency(value, currency);
 
   // Get upcoming subscriptions (active subscriptions with renewal date within next 7 days)
   const upcomingSubscriptions = useMemo(() => {
@@ -44,6 +63,8 @@ export default function App() {
         price: sub.price,
         currency: sub.currency,
         daysLeft: dayjs(sub.renewalDate!).diff(now, "day"),
+        color: sub.color,
+        domain: sub.domain,
       }));
   }, [subscriptions]);
 
@@ -54,7 +75,28 @@ export default function App() {
   };
 
   const handleCreateSubscription = (newSubscription: Subscription) => {
-    addSubscription(newSubscription);
+    if (editingSubscription) {
+      updateSubscription(newSubscription);
+      setEditingSubscription(null);
+    } else {
+      addSubscription(newSubscription);
+    }
+  };
+
+  const openModal = (subscription?: Subscription) => {
+    setEditingSubscription(subscription ?? null);
+    setModalKey((k) => k + 1);
+    setIsModalVisible(true);
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    openModal(subscription);
+    setExpandedSubscriptionId(null);
+  };
+
+  const handleDeleteSubscription = (id: string) => {
+    removeSubscription(id);
+    setExpandedSubscriptionId(null);
   };
 
   // Get user display name: firstName, fullName, or email
@@ -80,26 +122,111 @@ export default function App() {
                 <Text className="home-user-name">{displayName}</Text>
               </View>
 
-              <Pressable onPress={() => setIsModalVisible(true)}>
-                <Image source={icons.add} className="home-add-icon" />
+              <Pressable
+                onPress={() => openModal()}
+                className="size-10 items-center justify-center rounded-full bg-muted"
+              >
+                <Ionicons name="add" size={20} color={isDark ? "#ededed" : "#191919"} />
               </Pressable>
             </View>
 
-            <View className="home-balance-card">
-              <Text className="home-balance-label">Balance</Text>
+            <LinearGradient
+              colors={["#1a1a2e", "#16213e", "#0f3460"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              className="my-2.5 justify-between gap-4 p-6"
+              style={{ minHeight: 200, borderRadius: 24 }}
+            >
+              <Text className="home-balance-label">Monthly Spend</Text>
 
               <View className="home-balance-row">
-                <Text className="home-balance-amount">
-                  {formatCurrency(HOME_BALANCE.amount)}
+                <Text className="home-balance-amount" numberOfLines={1} adjustsFontSizeToFit>
+                  {fmt(
+                    subscriptions.reduce(
+                      (sum, sub) => {
+                        const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+                        return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
+                      },
+                      0,
+                    ),
+                  )}
                 </Text>
-                <Text className="home-balance-date">
-                  {dayjs(HOME_BALANCE.nextRenewalDate).format("MM/DD")}
-                </Text>
+                <View className="items-end">
+                  <Text className="home-balance-date">
+                    {dayjs(
+                      subscriptions
+                        .filter(
+                          (s) =>
+                            s.renewalDate &&
+                            dayjs(s.renewalDate).isAfter(dayjs()),
+                        )
+                        .sort((a, b) =>
+                          dayjs(a.renewalDate!).diff(dayjs(b.renewalDate!)),
+                        )[0]?.renewalDate ?? HOME_BALANCE.nextRenewalDate,
+                    ).format("MMM D")}
+                  </Text>
+                  <Text className="home-balance-date-label">Next renewal</Text>
+                </View>
               </View>
-            </View>
+
+              <View className="home-balance-stats">
+                <View className="home-balance-stat">
+                  <Text className="home-balance-stat-value">
+                    {subscriptions.length}
+                  </Text>
+                  <Text className="home-balance-stat-label">Active</Text>
+                </View>
+                <View className="home-balance-stat">
+                  <Text className="home-balance-stat-value">
+                    {subscriptions.length > 0
+                      ? fmt(
+                          subscriptions.reduce(
+                            (sum, sub) => {
+                              const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+                              return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
+                            },
+                            0,
+                          ) / subscriptions.length,
+                        )
+                      : ratesLoaded ? fmt(0) : "—"}
+                  </Text>
+                  <Text className="home-balance-stat-label">Avg / sub</Text>
+                </View>
+                <View className="home-balance-stat">
+                  <Text className="home-balance-stat-value">
+                    {fmt(
+                      subscriptions.reduce(
+                        (sum, sub) => {
+                          const annual = sub.billing === "Yearly" ? sub.price : sub.price * 12;
+                          return sum + convertSync(annual, sub.currency || "USD", currency, rates);
+                        },
+                        0,
+                      ),
+                    )}
+                  </Text>
+                  <Text className="home-balance-stat-label">Yearly</Text>
+                </View>
+              </View>
+            </LinearGradient>
 
             <View className="mb-5">
-              <ListHeading title="Upcoming" />
+              <View className="my-5 flex-row items-center justify-between">
+                <Text className="text-2xl font-sans-bold text-primary">
+                  Upcoming
+                </Text>
+                <Text className="text-sm font-sans-medium text-muted-foreground">
+                  {fmt(
+                    subscriptions.reduce(
+                      (sum, sub) => {
+                        const monthly = sub.billing === "Yearly" ? sub.price / 12 : sub.price;
+                        return sum + convertSync(monthly, sub.currency || "USD", currency, rates);
+                      },
+                      0,
+                    ),
+                  )}
+                  /mo · {subscriptions.length} subs
+                </Text>
+              </View>
 
               <FlatList
                 data={upcomingSubscriptions}
@@ -127,6 +254,8 @@ export default function App() {
             {...item}
             expanded={expandedSubscriptionId === item.id}
             onPress={() => handleSubscriptionPress(item)}
+            onEditPress={() => handleEditSubscription(item)}
+            onCancelPress={() => handleDeleteSubscription(item.id)}
           />
         )}
         extraData={expandedSubscriptionId}
@@ -139,9 +268,11 @@ export default function App() {
       />
 
       <CreateSubscriptionModal
+        key={`sub-modal-${modalKey}`}
         visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
+        onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
         onSubmit={handleCreateSubscription}
+        initialSubscription={editingSubscription ?? undefined}
       />
     </SafeAreaView>
   );

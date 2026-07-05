@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
   type SharedValue,
 } from "react-native-reanimated";
+import { useTheme } from "@/lib/useThemeSync";
 
 const ICON_SIZE = 22;
 const LABEL_SIZE = 13;
@@ -64,6 +65,7 @@ function TabButton({
   onContentLayout: (name: string, e: LayoutChangeEvent) => void;
   onTabLayout: (e: LayoutChangeEvent) => void;
 }) {
+  const { isDark } = useTheme();
   const animStyle = useAnimatedStyle(() => ({
     flex: flexVal.value,
   }));
@@ -96,14 +98,14 @@ function TabButton({
           <Ionicons
             name={tab.icon as any}
             size={ICON_SIZE}
-            color={isActive ? "#fff" : "#888"}
+            color={isActive ? (isDark ? "#fff" : "#191919") : "#888"}
           />
           {isActive && (
             <Text
               style={{
                 fontSize: LABEL_SIZE,
                 fontWeight: "600",
-                color: "#fff",
+                color: isDark ? "#fff" : "#191919",
                 letterSpacing: 0.2,
               }}
             >
@@ -122,6 +124,7 @@ export default function CustomTabBar({
   descriptors,
 }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
   const translateX = useSharedValue(0);
   const pillW = useSharedValue(0);
   const measuresRef = useRef<Record<string, { x: number; w: number }>>({});
@@ -250,6 +253,7 @@ export default function CustomTabBar({
 
   return (
     <View
+      className={isDark ? "bg-[#1a1a1a]" : "bg-white"}
       style={{
         position: "absolute",
         bottom: Math.max(insets.bottom, BAR_BOTTOM),
@@ -257,7 +261,6 @@ export default function CustomTabBar({
         right: BAR_MARGIN_H,
         height: BAR_HEIGHT,
         borderRadius: BAR_RADIUS,
-        backgroundColor: "#fff",
         padding: 3,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 6 },
@@ -268,13 +271,13 @@ export default function CustomTabBar({
     >
       <View
         onLayout={handleBarLayout}
+        className={isDark ? "bg-[#2a2a2a]/95" : "bg-[#e6e6e6]/95"}
         style={{
           flex: 1,
           flexDirection: "row",
           alignItems: "center",
           borderRadius: BAR_RADIUS - 3,
           overflow: "hidden",
-          backgroundColor: "rgba(230, 230, 230, 0.94)",
         }}
       >
       <Animated.View
@@ -286,7 +289,7 @@ export default function CustomTabBar({
             top: PILL_PAD_TOP,
             bottom: PILL_PAD_BOT,
             borderRadius: PILL_RADIUS,
-            backgroundColor: "#191919",
+            backgroundColor: isDark ? "#191919" : "#fff",
           },
         ]}
       />
