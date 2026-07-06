@@ -18,7 +18,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { getExchangeRates } from "@/lib/currency";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { useTheme } from "@/lib/useThemeSync";
 
 const DETAIL_ICONS = {
@@ -51,15 +51,16 @@ const SubscriptionCard = ({
   status,
   domain,
 }: SubscriptionCardProps) => {
-  const displayCurrency = useSettingsStore((s) => s.currency);
+  const { data: settings } = useUserSettings();
+  const displayCurrency = settings?.currency ?? "USD";
   const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
   const cardColor = color ?? "#2f6fed";
   const smartStatus = getSmartStatusLabel(status, renewalDate);
   const monthsActive = getMonthsActive(startDate);
   const daysUntilRenewal = getDaysUntilRenewal(renewalDate);
-  const totalSpent = monthsActive > 0 ? monthlyEquiv * monthsActive : monthlyEquiv;
   const monthlyEquiv = billing === "Yearly" ? price / 12 : price;
+  const totalSpent = monthsActive > 0 ? monthlyEquiv * monthsActive : monthlyEquiv;
 
   const displayMeta = category?.trim() || plan?.trim() || "";
 

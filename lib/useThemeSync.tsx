@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Appearance, ColorSchemeName } from "react-native";
 import { useSettingsStore } from "./settingsStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 
 export type Theme = "light" | "dark";
 
@@ -25,6 +26,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [resolvedScheme, setResolvedScheme] = useState<ColorSchemeName>(
     Appearance.getColorScheme()
   );
+
+  // Sync saved theme from DB to Zustand on load / after mutation
+  const { data: settings } = useUserSettings();
+  useEffect(() => {
+    if (settings?.themeMode) {
+      useSettingsStore.getState().setThemeMode(settings.themeMode);
+    }
+  }, [settings?.themeMode]);
 
   const updateScheme = useCallback(() => {
     if (themeMode === "system") {

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { getExchangeRates } from "@/lib/currency";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 
 const UpcomingSubscriptionCard = ({
   name,
@@ -15,7 +15,8 @@ const UpcomingSubscriptionCard = ({
   color,
   domain,
 }: UpcomingSubscription) => {
-  const displayCurrency = useSettingsStore((s) => s.currency);
+  const { data: settings } = useUserSettings();
+  const displayCurrency = settings?.currency ?? "USD";
   const [rates, setRates] = useState<Record<string, number>>({});
 
   useEffect(() => {

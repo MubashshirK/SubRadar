@@ -5,8 +5,8 @@ import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import { HOME_BALANCE } from "@/constants/data";
 import images from "@/constants/images";
 import "@/global.css";
-import { useSubscriptionStore } from "@/lib/subscriptionStore";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useSubscriptions, useCreateSubscription, useUpdateSubscription, useDeleteSubscription } from "@/lib/hooks/useSubscriptions";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { formatCurrency } from "@/lib/utils";
 import { getExchangeRates, convertSync } from "@/lib/currency";
 import { useUser } from "@clerk/expo";
@@ -15,14 +15,15 @@ import dayjs from "dayjs";
 import { LinearGradient } from "expo-linear-gradient";
 import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, Image, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/useThemeSync";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
   const { user } = useUser();
-  const currency = useSettingsStore((s) => s.currency);
+  const { data: settings } = useUserSettings();
+  const currency = settings?.currency ?? "USD";
   const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
   const [ratesLoaded, setRatesLoaded] = useState(false);
@@ -32,7 +33,10 @@ export default function App() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [modalKey, setModalKey] = useState(0);
-  const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
+  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const { mutate: createSubscription } = useCreateSubscription();
+  const { mutate: updateSubscription } = useUpdateSubscription();
+  const { mutate: deleteSubscription } = useDeleteSubscription();
 
   useEffect(() => {
     getExchangeRates().then((r) => {
@@ -79,7 +83,7 @@ export default function App() {
       updateSubscription(newSubscription);
       setEditingSubscription(null);
     } else {
-      addSubscription(newSubscription);
+      createSubscription(newSubscription);
     }
   };
 
@@ -95,7 +99,7 @@ export default function App() {
   };
 
   const handleDeleteSubscription = (id: string) => {
-    removeSubscription(id);
+    deleteSubscription(id);
     setExpandedSubscriptionId(null);
   };
 
@@ -237,9 +241,15 @@ export default function App() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
-                  <Text className="home-empty-state">
-                    No upcoming renewals yet.
-                  </Text>
+                  isLoading ? (
+                    <View className="size-32 items-center justify-center">
+                      <ActivityIndicator size="small" color={isDark ? "#ededed" : "#191919"} />
+                    </View>
+                  ) : (
+                    <Text className="home-empty-state">
+                      No upcoming renewals yet.
+                    </Text>
+                  )
                 }
               />
             </View>
@@ -262,9 +272,15 @@ export default function App() {
         ItemSeparatorComponent={() => <View className="h-4" />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text className="home-empty-state">No subscriptions yet.</Text>
+          isLoading ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator size="large" color={isDark ? "#ededed" : "#191919"} />
+            </View>
+          ) : (
+            <Text className="home-empty-state">No subscriptions yet.</Text>
+          )
         }
-        contentContainerClassName="pb-30"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
       />
 
       <CreateSubscriptionModal

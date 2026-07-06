@@ -1,14 +1,14 @@
 import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import SubscriptionCard from "@/components/SubscriptionCard";
-import { useSubscriptionStore } from "@/lib/subscriptionStore";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useSubscriptions, useCreateSubscription, useUpdateSubscription, useDeleteSubscription } from "@/lib/hooks/useSubscriptions";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { formatCurrency } from "@/lib/utils";
 import { getExchangeRates, convertSync } from "@/lib/currency";
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/useThemeSync";
 
@@ -21,8 +21,12 @@ const Subscriptions = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [modalKey, setModalKey] = useState(0);
-  const { subscriptions, addSubscription, updateSubscription, removeSubscription } = useSubscriptionStore();
-  const currency = useSettingsStore((s) => s.currency);
+  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const { mutate: createSubscription } = useCreateSubscription();
+  const { mutate: updateSubscription } = useUpdateSubscription();
+  const { mutate: deleteSubscription } = useDeleteSubscription();
+  const { data: settings } = useUserSettings();
+  const currency = settings?.currency ?? "USD";
   const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
 
@@ -65,7 +69,7 @@ const Subscriptions = () => {
   };
 
   const handleDeleteSubscription = (id: string) => {
-    removeSubscription(id);
+    deleteSubscription(id);
     setExpandedId(null);
   };
 
@@ -74,7 +78,7 @@ const Subscriptions = () => {
       updateSubscription(subscription);
       setEditingSubscription(null);
     } else {
-      addSubscription(subscription);
+      createSubscription(subscription);
     }
   };
 
@@ -185,24 +189,39 @@ const Subscriptions = () => {
           </View>
         )}
         ItemSeparatorComponent={() => <View className="h-3" />}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
-          <View className="items-center py-16">
-            <Ionicons
-              name="search-outline"
-              size={40}
-              color="rgba(55, 53, 47, 0.2)"
-            />
-            <Text className="mt-4 text-base font-sans-semibold text-muted-foreground">
-              No subscriptions found
-            </Text>
-            <Text className="mt-1 text-sm font-sans-medium text-muted-foreground">
-              Try a different search or category.
-            </Text>
-          </View>
+          isLoading ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator size="large" color={isDark ? "#ededed" : "#191919"} />
+              <Text className="mt-4 text-base font-sans-semibold text-muted-foreground">
+                Loading subscriptions...
+              </Text>
+            </View>
+          ) : subscriptions.length === 0 ? (
+            <View className="items-center py-16">
+              <Ionicons name="add-circle-outline" size={40} color="rgba(55, 53, 47, 0.2)" />
+              <Text className="mt-4 text-base font-sans-semibold text-muted-foreground">
+                No subscriptions yet.
+              </Text>
+              <Text className="mt-1 text-sm font-sans-medium text-muted-foreground">
+                Tap + to add your first subscription.
+              </Text>
+            </View>
+          ) : (
+            <View className="items-center py-16">
+              <Ionicons name="search-outline" size={40} color="rgba(55, 53, 47, 0.2)" />
+              <Text className="mt-4 text-base font-sans-semibold text-muted-foreground">
+                No subscriptions found
+              </Text>
+              <Text className="mt-1 text-sm font-sans-medium text-muted-foreground">
+                Try a different search or category.
+              </Text>
+            </View>
+          )
         }
       />
 

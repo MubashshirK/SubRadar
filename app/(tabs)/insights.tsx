@@ -1,7 +1,7 @@
 import { convertSync, getExchangeRates } from "@/lib/currency";
 import { getLogoUrl } from "@/lib/logo";
-import { useSettingsStore } from "@/lib/settingsStore";
-import { useSubscriptionStore } from "@/lib/subscriptionStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
+import { useSubscriptions } from "@/lib/hooks/useSubscriptions";
 import { formatCurrency } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
@@ -15,6 +15,7 @@ import React, {
   useState,
 } from "react";
 import {
+  ActivityIndicator,
   LayoutChangeEvent,
   Pressable,
   ScrollView,
@@ -65,8 +66,9 @@ function useAnimatedNumber(target: number, duration = 800) {
 }
 
 const Insights = () => {
-  const { subscriptions } = useSubscriptionStore();
-  const currency = useSettingsStore((s) => s.currency);
+  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const { data: settings } = useUserSettings();
+  const currency = settings?.currency ?? "USD";
   const [period, setPeriod] = useState<Period>("monthly");
   const [rates, setRates] = useState<Record<string, number>>({});
 
@@ -256,6 +258,19 @@ const Insights = () => {
     }
     return `You're spreading your ${fmt(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
   }, [categoryBreakdown, topSubscriptions, monthlyTotal, fmt]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background p-5 pb-5">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#191919" />
+          <Text className="mt-4 text-lg font-sans-semibold text-muted-foreground text-center">
+            Loading insights...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (subscriptions.length === 0) {
     return (

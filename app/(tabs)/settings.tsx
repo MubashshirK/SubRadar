@@ -8,7 +8,8 @@ import images from "@/constants/images";
 import EditProfileSheet from "@/components/settings/EditProfileSheet";
 import ChangePasswordSheet from "@/components/settings/ChangePasswordSheet";
 import ChangeEmailSheet from "@/components/settings/ChangeEmailSheet";
-import { useSettingsStore, CURRENCIES, ThemeMode } from "@/lib/settingsStore";
+import { CURRENCIES, ThemeMode } from "@/lib/settingsStore";
+import { useUserSettings, useUpdateUserSettings } from "@/lib/hooks/useUserSettings";
 import CurrencyPickerSheet from "@/components/settings/CurrencyPickerSheet";
 import ThemePickerSheet from "@/components/settings/ThemePickerSheet";
 import { useTheme } from "@/lib/useThemeSync";
@@ -97,19 +98,15 @@ const Settings = () => {
   const [showThemePicker, setShowThemePicker] = React.useState(false);
   const { isDark } = useTheme();
 
-  const {
-    currency,
-    themeMode,
-    billingAlertEnabled,
-    billingAlertDays,
-    renewalReminderEnabled,
-    renewalReminderDays,
-    customCategories,
-    setCurrency,
-    setThemeMode,
-    setBillingAlertEnabled,
-    setRenewalReminderEnabled,
-  } = useSettingsStore();
+  const { data: settings } = useUserSettings();
+  const { mutate: updateSettings } = useUpdateUserSettings();
+
+  const currency = settings?.currency ?? "USD";
+  const themeMode = settings?.themeMode ?? "system";
+  const billingAlertEnabled = settings?.billingAlertEnabled ?? false;
+  const billingAlertDays = settings?.billingAlertDays ?? 3;
+  const renewalReminderEnabled = settings?.renewalReminderEnabled ?? false;
+  const renewalReminderDays = settings?.renewalReminderDays ?? 1;
 
   const currencyObj = CURRENCIES.find((c) => c.code === currency);
   const currencyLabel = currencyObj ? `${currencyObj.symbol} ${currencyObj.code}` : currency;
@@ -218,7 +215,7 @@ const Settings = () => {
               rightElement={
                 <Switch
                   value={billingAlertEnabled}
-                  onValueChange={setBillingAlertEnabled}
+                  onValueChange={(value) => updateSettings({ billingAlertEnabled: value })}
                   trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#e03e3e" }}
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
@@ -234,7 +231,7 @@ const Settings = () => {
               rightElement={
                 <Switch
                   value={renewalReminderEnabled}
-                  onValueChange={setRenewalReminderEnabled}
+                  onValueChange={(value) => updateSettings({ renewalReminderEnabled: value })}
                   trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#ea7a53" }}
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
@@ -253,15 +250,8 @@ const Settings = () => {
                   <Ionicons name="chevron-forward" size={16} color="#ccc" />
                 </View>
               }
-              onPress={() => setShowCurrencyPicker(true)}
-            />
-            <Row
-              icon="pricetag-outline"
-              iconColor="#7c3aed"
-              iconBg="#f3eefb"
-              label="Categories"
-              description={`${customCategories.length} custom ${customCategories.length === 1 ? "category" : "categories"}`}
               isLast
+              onPress={() => setShowCurrencyPicker(true)}
             />
           </View>
         </View>
@@ -383,13 +373,13 @@ const Settings = () => {
         visible={showCurrencyPicker}
         onClose={() => setShowCurrencyPicker(false)}
         selected={currency}
-        onSelect={setCurrency}
+        onSelect={(code) => updateSettings({ currency: code })}
       />
       <ThemePickerSheet
         visible={showThemePicker}
         onClose={() => setShowThemePicker(false)}
         selected={themeMode}
-        onSelect={setThemeMode}
+        onSelect={(mode) => updateSettings({ themeMode: mode })}
       />
     </SafeAreaView>
   );

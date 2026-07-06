@@ -31,7 +31,8 @@ import {
   type ServiceEntry,
 } from "@/lib/logo";
 import DatePicker from "@/components/DatePicker";
-import { useSettingsStore, CURRENCIES } from "@/lib/settingsStore";
+import { CURRENCIES } from "@/lib/settingsStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { useTheme } from "@/lib/useThemeSync";
 
 type Frequency = "Monthly" | "Yearly";
@@ -104,7 +105,8 @@ const CreateSubscriptionModal = ({
   initialSubscription,
 }: CreateSubscriptionModalProps) => {
   const isEditing = !!initialSubscription;
-  const settingsCurrency = useSettingsStore((s) => s.currency);
+  const { data: settings } = useUserSettings();
+  const settingsCurrency = settings?.currency ?? "USD";
   const [subscriptionCurrency, setSubscriptionCurrency] = useState<string | undefined>(
     initialSubscription?.currency ?? undefined,
   );

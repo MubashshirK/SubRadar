@@ -62,7 +62,7 @@ export default function Sheet({
             </Text>
             <Pressable
               onPress={onClose}
-              className="size-8 items-center justify-center rounded-full bg-black/10 dark:bg-white/15"
+              className="size-8 items-center justify-center rounded-full bg-muted"
             >
               <Ionicons name="close" size={16} color={isDark ? "#888" : "#666"} />
             </Pressable>

@@ -103,7 +103,6 @@ export default function CurrencyPickerSheet({
             shadowOpacity: 0.15,
             shadowRadius: 16,
             elevation: 24,
-            overflow: "hidden",
           }}
         >
           {/* Drag handle */}
