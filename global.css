@@ -7,16 +7,21 @@
 @theme {
   --color-background: #f8f8f8;
   --color-foreground: #191919;
-  --color-card: #f7f6f3;
-  --color-muted: #efefed;
-  --color-muted-foreground: rgba(55, 53, 47, 0.5);
+  --color-card: #ffffff;
+  --color-muted: #f0f0ef;
+  --color-muted-foreground: rgba(55, 53, 47, 0.55);
   --color-primary: #191919;
-  --color-accent: #2f6fed;
-  --color-border: rgba(55, 53, 47, 0.12);
-  --color-success: #0f7b6c;
-  --color-destructive: #e03e3e;
-  --color-subscription: #e8f3ff;
-  --color-input: #e5e5e5;
+  --color-accent: #6366f1;
+  --color-accent-foreground: #ffffff;
+  --color-border: rgba(55, 53, 47, 0.1);
+  --color-success: #10b981;
+  --color-destructive: #ef4444;
+  --color-subscription: #eef2ff;
+  --color-input: #e8e8e6;
+  --color-ring: #6366f1;
+
+  /* Lighter accent variant for backgrounds */
+  --color-accent-light: rgba(99, 102, 241, 0.08);
 
   --font-sans: sans-regular;
   --font-sans-light: sans-light;
@@ -44,24 +49,59 @@
   --spacing-20: 80px;
   --spacing-24: 96px;
   --spacing-30: 120px;
+
+  /* Shadow system - Light mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 20px rgba(47, 111, 237, 0.15);
 }
 
 /* ── Dark Mode Tokens ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #111111;
+    --color-background: #0f0f12;
     --color-foreground: #ededed;
-    --color-card: #1a1a1a;
-    --color-muted: #2a2a2a;
+    --color-card: #18181b;
+    --color-muted: #27272a;
     --color-muted-foreground: rgba(237, 237, 237, 0.5);
     --color-primary: #ededed;
-    --color-border: rgba(237, 237, 237, 0.12);
-    --color-subscription: #1a2a3a;
-    --color-input: #3a3a3a;
+    --color-accent: #818cf8;
+    --color-accent-foreground: #0f0f12;
+    --color-border: rgba(237, 237, 237, 0.08);
+    --color-success: #34d399;
+    --color-destructive: #f87171;
+    --color-subscription: #1e1b4b;
+    --color-input: #27272a;
+    --color-ring: #818cf8;
+    --color-accent-light: rgba(129, 140, 248, 0.12);
+
+    /* Dark mode shadows - more subtle, with blue tint */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.45), 0 8px 32px rgba(0, 0, 0, 0.35);
+    --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.3);
   }
 }
 
 @layer components {
+  /* Shadow utilities */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
   /* Home Header */
   .home-header {
     @apply mb-2.5 flex-row items-center justify-between;

@@ -9,6 +9,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { useTheme } from "@/lib/useThemeSync";
+import * as Haptics from "expo-haptics";
 
 const ICON_SIZE = 22;
 const LABEL_SIZE = 13;
@@ -83,7 +84,10 @@ function TabButton({
       ]}
     >
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPress();
+        }}
         hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         style={({ pressed }) => ({
           alignItems: "center",

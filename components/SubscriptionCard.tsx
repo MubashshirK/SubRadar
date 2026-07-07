@@ -80,8 +80,6 @@ const SubscriptionCard = ({
   const hasMeasured = useSharedValue(false);
   const buttonPressRef = useRef(false);
 
-  const ANIM_CONFIG = { duration: 250, easing: Easing.out(Easing.cubic) };
-
   const detailsStyle = useAnimatedStyle(() => ({
     opacity: expandAnim.value,
     maxHeight: hasMeasured.value ? maxHeightValue.value : undefined,
@@ -98,8 +96,8 @@ const SubscriptionCard = ({
     }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    const ANIM_CONFIG = { duration: 250, easing: Easing.out(Easing.cubic) };
     if (expanded && hasMeasured.value) {
       maxHeightValue.value = withTiming(contentHeight.value, ANIM_CONFIG);
       expandAnim.value = withTiming(1, ANIM_CONFIG);
@@ -107,7 +105,7 @@ const SubscriptionCard = ({
       maxHeightValue.value = withTiming(0, ANIM_CONFIG);
       expandAnim.value = withTiming(0, ANIM_CONFIG);
     }
-  }, [expanded]);
+  }, [expanded, contentHeight.value, expandAnim, hasMeasured.value, maxHeightValue]);
 
   const handleCardPress = () => {
     if (buttonPressRef.current) {

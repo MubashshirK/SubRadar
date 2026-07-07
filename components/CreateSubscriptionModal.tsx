@@ -187,12 +187,14 @@ const CreateSubscriptionModal = ({
 
   useEffect(() => {
     if (visible) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setIsModalVisible(true);
       cardTranslateY.value = withTiming(0, {
         duration: 350,
         easing: Easing.out(Easing.cubic),
       });
     } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       cardTranslateY.value = withTiming(screenHeight, {
         duration: 300,
         easing: Easing.in(Easing.cubic),
@@ -240,7 +242,7 @@ const CreateSubscriptionModal = ({
   const handleSubmit = () => {
     if (!isValidForm) return;
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const priceVal = parseFloat(price);
     const startParsed = dayjs(startDateStr, "MM/DD/YYYY", true);
