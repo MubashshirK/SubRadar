@@ -1,4 +1,6 @@
+import ConfirmDialog from "@/components/ConfirmDialog";
 import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
+import SubscriptionsSkeleton from "@/components/loading/SubscriptionsSkeleton";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { useSubscriptions, useCreateSubscription, useUpdateSubscription, useDeleteSubscription } from "@/lib/hooks/useSubscriptions";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
@@ -8,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/useThemeSync";
 
@@ -21,7 +23,9 @@ const Subscriptions = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [modalKey, setModalKey] = useState(0);
-  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const { data: subscriptions = [], isPending } = useSubscriptions();
   const { mutate: createSubscription } = useCreateSubscription();
   const { mutate: updateSubscription } = useUpdateSubscription();
   const { mutate: deleteSubscription } = useDeleteSubscription();
@@ -69,8 +73,17 @@ const Subscriptions = () => {
   };
 
   const handleDeleteSubscription = (id: string) => {
-    deleteSubscription(id);
-    setExpandedId(null);
+    setDeleteTargetId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTargetId) {
+      deleteSubscription(deleteTargetId);
+      setExpandedId(null);
+    }
+    setShowDeleteConfirm(false);
+    setDeleteTargetId(null);
   };
 
   const handleSubmitSubscription = (subscription: Subscription) => {
@@ -92,6 +105,14 @@ const Subscriptions = () => {
     openModal(subscription);
     setExpandedId(null);
   };
+
+  if (isPending) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <SubscriptionsSkeleton />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background pb-5">
@@ -195,14 +216,7 @@ const Subscriptions = () => {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
-          isLoading ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color={isDark ? "#ededed" : "#191919"} />
-              <Text className="mt-4 text-base font-sans-semibold text-muted-foreground">
-                Loading subscriptions...
-              </Text>
-            </View>
-          ) : subscriptions.length === 0 ? (
+          subscriptions.length === 0 ? (
             <View className="items-center py-16">
               <Ionicons name="add-circle-outline" size={40} color="rgba(55, 53, 47, 0.2)" />
               <Text className="mt-4 text-base font-sans-semibold text-muted-foreground">
@@ -232,6 +246,15 @@ const Subscriptions = () => {
         onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
         onSubmit={handleSubmitSubscription}
         initialSubscription={editingSubscription ?? undefined}
+      />
+
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        onClose={() => { setShowDeleteConfirm(false); setDeleteTargetId(null); }}
+        onConfirm={confirmDelete}
+        title="Delete Subscription"
+        message="Are you sure you want to delete this subscription? This action cannot be undone."
+        confirmLabel="Delete"
       />
     </SafeAreaView>
   );

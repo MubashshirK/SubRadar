@@ -5,6 +5,7 @@ import { Image, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
 import images from "@/constants/images";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import EditProfileSheet from "@/components/settings/EditProfileSheet";
 import ChangePasswordSheet from "@/components/settings/ChangePasswordSheet";
 import ChangeEmailSheet from "@/components/settings/ChangeEmailSheet";
@@ -91,6 +92,7 @@ const Settings = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = React.useState(false);
   const [showEditProfile, setShowEditProfile] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);
   const [showChangeEmail, setShowChangeEmail] = React.useState(false);
@@ -124,6 +126,11 @@ const Settings = () => {
     : images.avatar;
 
   const handleSignOut = async () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const confirmSignOut = async () => {
+    setShowSignOutConfirm(false);
     setIsSigningOut(true);
     try {
       await signOut();
@@ -380,6 +387,16 @@ const Settings = () => {
         onClose={() => setShowThemePicker(false)}
         selected={themeMode}
         onSelect={(mode) => updateSettings({ themeMode: mode })}
+      />
+
+      <ConfirmDialog
+        visible={showSignOutConfirm}
+        onClose={() => setShowSignOutConfirm(false)}
+        onConfirm={confirmSignOut}
+        title="Sign Out"
+        message="Are you sure you want to sign out? You will need to sign in again to access your account."
+        confirmLabel="Sign Out"
+        loading={isSigningOut}
       />
     </SafeAreaView>
   );

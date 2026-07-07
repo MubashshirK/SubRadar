@@ -15,7 +15,7 @@
   --color-accent-foreground: #ffffff;
   --color-border: rgba(55, 53, 47, 0.1);
   --color-success: #10b981;
-  --color-destructive: #ef4444;
+  --color-destructive: #e03e3e;
   --color-subscription: #eef2ff;
   --color-input: #e8e8e6;
   --color-ring: #6366f1;
@@ -70,7 +70,7 @@
     --color-accent-foreground: #0f0f12;
     --color-border: rgba(237, 237, 237, 0.08);
     --color-success: #34d399;
-    --color-destructive: #f87171;
+    --color-destructive: #e03e3e;
     --color-subscription: #1e1b4b;
     --color-input: #27272a;
     --color-ring: #818cf8;

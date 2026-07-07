@@ -1,4 +1,5 @@
 import { convertSync, getExchangeRates } from "@/lib/currency";
+import InsightsSkeleton from "@/components/loading/InsightsSkeleton";
 import { getLogoUrl } from "@/lib/logo";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { useSubscriptions } from "@/lib/hooks/useSubscriptions";
@@ -15,7 +16,6 @@ import React, {
   useState,
 } from "react";
 import {
-  ActivityIndicator,
   LayoutChangeEvent,
   Pressable,
   ScrollView,
@@ -66,7 +66,7 @@ function useAnimatedNumber(target: number, duration = 800) {
 }
 
 const Insights = () => {
-  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const { data: subscriptions = [], isPending } = useSubscriptions();
   const { data: settings } = useUserSettings();
   const currency = settings?.currency ?? "USD";
   const [period, setPeriod] = useState<Period>("monthly");
@@ -259,17 +259,8 @@ const Insights = () => {
     return `You're spreading your ${fmt(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
   }, [categoryBreakdown, topSubscriptions, monthlyTotal, fmt]);
 
-  if (isLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-background p-5 pb-5">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#191919" />
-          <Text className="mt-4 text-lg font-sans-semibold text-muted-foreground text-center">
-            Loading insights...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
+  if (isPending) {
+    return <InsightsSkeleton />;
   }
 
   if (subscriptions.length === 0) {

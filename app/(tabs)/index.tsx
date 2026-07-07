@@ -1,4 +1,6 @@
+import ConfirmDialog from "@/components/ConfirmDialog";
 import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
+import HomeSkeleton from "@/components/loading/HomeSkeleton";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
@@ -14,7 +16,7 @@ import dayjs from "dayjs";
 import { LinearGradient } from "expo-linear-gradient";
 import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/useThemeSync";
 const SafeAreaView = styled(RNSafeAreaView);
@@ -32,7 +34,9 @@ export default function App() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [modalKey, setModalKey] = useState(0);
-  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const { data: subscriptions = [], isPending } = useSubscriptions();
   const { mutate: createSubscription } = useCreateSubscription();
   const { mutate: updateSubscription } = useUpdateSubscription();
   const { mutate: deleteSubscription } = useDeleteSubscription();
@@ -98,8 +102,17 @@ export default function App() {
   };
 
   const handleDeleteSubscription = (id: string) => {
-    deleteSubscription(id);
-    setExpandedSubscriptionId(null);
+    setDeleteTargetId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTargetId) {
+      deleteSubscription(deleteTargetId);
+      setExpandedSubscriptionId(null);
+    }
+    setShowDeleteConfirm(false);
+    setDeleteTargetId(null);
   };
 
   // Get user display name: firstName, fullName, or email
@@ -108,6 +121,14 @@ export default function App() {
     user?.fullName ||
     user?.emailAddresses[0]?.emailAddress ||
     "User";
+
+  if (isPending) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <HomeSkeleton />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
@@ -240,15 +261,9 @@ export default function App() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
-                  isLoading ? (
-                    <View className="size-32 items-center justify-center">
-                      <ActivityIndicator size="small" color={isDark ? "#ededed" : "#191919"} />
-                    </View>
-                  ) : (
-                    <Text className="home-empty-state">
-                      No upcoming renewals yet.
-                    </Text>
-                  )
+                  <Text className="home-empty-state">
+                    No upcoming renewals yet.
+                  </Text>
                 }
               />
             </View>
@@ -271,13 +286,7 @@ export default function App() {
         ItemSeparatorComponent={() => <View className="h-4" />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          isLoading ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color={isDark ? "#ededed" : "#191919"} />
-            </View>
-          ) : (
-            <Text className="home-empty-state">No subscriptions yet.</Text>
-          )
+          <Text className="home-empty-state">No subscriptions yet.</Text>
         }
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
       />
@@ -288,6 +297,15 @@ export default function App() {
         onClose={() => { setIsModalVisible(false); setEditingSubscription(null); }}
         onSubmit={handleCreateSubscription}
         initialSubscription={editingSubscription ?? undefined}
+      />
+
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        onClose={() => { setShowDeleteConfirm(false); setDeleteTargetId(null); }}
+        onConfirm={confirmDelete}
+        title="Delete Subscription"
+        message="Are you sure you want to delete this subscription? This action cannot be undone."
+        confirmLabel="Delete"
       />
     </SafeAreaView>
   );
