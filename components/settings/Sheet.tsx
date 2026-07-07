@@ -41,7 +41,7 @@ export default function Sheet({
 
         {/* Sheet */}
         <View
-          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-[#1a1a1a] pb-8"
+          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-card pb-8"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: -4 },

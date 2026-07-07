@@ -2,7 +2,6 @@ import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { HOME_BALANCE } from "@/constants/data";
 import images from "@/constants/images";
 import "@/global.css";
 import { useSubscriptions, useCreateSubscription, useUpdateSubscription, useDeleteSubscription } from "@/lib/hooks/useSubscriptions";
@@ -166,7 +165,7 @@ export default function App() {
                         )
                         .sort((a, b) =>
                           dayjs(a.renewalDate!).diff(dayjs(b.renewalDate!)),
-                        )[0]?.renewalDate ?? HOME_BALANCE.nextRenewalDate,
+                        )[0]?.renewalDate ?? dayjs().add(1, "month").toISOString(),
                     ).format("MMM D")}
                   </Text>
                   <Text className="home-balance-date-label">Next renewal</Text>
@@ -213,8 +212,8 @@ export default function App() {
               </View>
             </LinearGradient>
 
-            <View className="mb-5">
-              <View className="my-5 flex-row items-center justify-between">
+            <View className="mb-4">
+              <View className="my-4 flex-row items-center justify-between">
                 <Text className="text-2xl font-sans-bold text-primary">
                   Upcoming
                 </Text>

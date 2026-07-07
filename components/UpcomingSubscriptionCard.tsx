@@ -31,7 +31,7 @@ const UpcomingSubscriptionCard = ({
     : price;
 
   return (
-    <View className="mr-3 w-44 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-3.5"
+    <View className="mr-3 w-44 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-3.5"
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },

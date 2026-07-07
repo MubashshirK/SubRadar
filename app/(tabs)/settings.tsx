@@ -144,7 +144,7 @@ const Settings = () => {
         </Text>
 
         {/* ── Profile Card ── */}
-        <Pressable className="mb-8 flex-row items-center gap-4 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a] px-5 py-5">
+        <Pressable className="mb-8 flex-row items-center gap-4 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card px-5 py-5">
           <Image source={avatarSource} className="size-14 rounded-full" />
           <View className="min-w-0 flex-1">
             <Text
@@ -170,7 +170,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Account
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
             <Row
               icon="person-outline"
               iconColor="#2f6fed"
@@ -205,7 +205,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Subscriptions
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
             <Row
               icon="card-outline"
               iconColor="#e03e3e"
@@ -261,7 +261,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Appearance
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
             <Row
               icon="moon-outline"
               iconColor="#191919"
@@ -287,7 +287,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Support
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
             <Row
               icon="help-circle-outline"
               iconColor="#2f6fed"
@@ -318,7 +318,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Legal
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
             <Row
               icon="document-text-outline"
               iconColor="#9a6700"
@@ -338,7 +338,7 @@ const Settings = () => {
 
         {/* ── Sign Out ── */}
         <Pressable
-          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a] px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
+          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
           onPress={handleSignOut}
           disabled={isSigningOut}
         >

@@ -35,7 +35,7 @@ export default function ThemePickerSheet({
         onPress={onClose}
       >
         <Pressable
-          className="w-[300px] rounded-2xl bg-white dark:bg-[#1a1a1a] p-5"
+          className="w-[300px] rounded-2xl bg-white dark:bg-card p-5"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 8 },

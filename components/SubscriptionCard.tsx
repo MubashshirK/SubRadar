@@ -9,7 +9,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { Image } from "expo-image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -74,19 +74,48 @@ const SubscriptionCard = ({
     return convertAndFormat(value, subCurrency || currency || "USD", displayCurrency, rates);
   };
 
-  // Simple expand animation
   const expandAnim = useSharedValue(0);
+  const contentHeight = useSharedValue(0);
+  const maxHeightValue = useSharedValue(0);
+  const hasMeasured = useSharedValue(false);
+  const buttonPressRef = useRef(false);
 
-  useEffect(() => {
-    expandAnim.value = withTiming(expanded ? 1 : 0, {
-      duration: 200,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [expanded, expandAnim]);
+  const ANIM_CONFIG = { duration: 250, easing: Easing.out(Easing.cubic) };
 
   const detailsStyle = useAnimatedStyle(() => ({
     opacity: expandAnim.value,
+    maxHeight: hasMeasured.value ? maxHeightValue.value : undefined,
+    overflow: "hidden" as const,
   }));
+
+  const handleLayout = (e: { nativeEvent: { layout: { height: number } } }) => {
+    const height = e.nativeEvent.layout.height;
+    if (height > 0 && !hasMeasured.value) {
+      hasMeasured.value = true;
+      contentHeight.value = height;
+      maxHeightValue.value = expanded ? height : 0;
+      expandAnim.value = expanded ? 1 : 0;
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (expanded && hasMeasured.value) {
+      maxHeightValue.value = withTiming(contentHeight.value, ANIM_CONFIG);
+      expandAnim.value = withTiming(1, ANIM_CONFIG);
+    } else if (!expanded) {
+      maxHeightValue.value = withTiming(0, ANIM_CONFIG);
+      expandAnim.value = withTiming(0, ANIM_CONFIG);
+    }
+  }, [expanded]);
+
+  const handleCardPress = () => {
+    if (buttonPressRef.current) {
+      buttonPressRef.current = false;
+      return;
+    }
+    onPress();
+  };
 
   // Status pill
   const statusPillClass = clsx(
@@ -113,7 +142,7 @@ const SubscriptionCard = ({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handleCardPress}
       className="sub-card"
       style={{
         shadowColor: "#000",
@@ -177,9 +206,9 @@ const SubscriptionCard = ({
       </View>
 
       {/* Expanded Details */}
-      {expanded && (
-        <Animated.View
-          style={detailsStyle}
+      <Animated.View style={detailsStyle}>
+        <View
+          onLayout={handleLayout}
           className="border-t border-border/40 px-4 pb-4 pt-3"
         >
           <View className="gap-4">
@@ -320,8 +349,8 @@ const SubscriptionCard = ({
             <View className="sub-actions">
               {onEditPress && (
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
+                  onPress={() => {
+                    buttonPressRef.current = true;
                     onEditPress();
                   }}
                   className="sub-action-edit"
@@ -332,8 +361,8 @@ const SubscriptionCard = ({
               )}
               {onCancelPress && (
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
+                  onPress={() => {
+                    buttonPressRef.current = true;
                     onCancelPress();
                   }}
                   className="sub-action-delete"
@@ -344,8 +373,8 @@ const SubscriptionCard = ({
               )}
             </View>
           </View>
-        </Animated.View>
-      )}
+        </View>
+      </Animated.View>
     </Pressable>
   );
 };

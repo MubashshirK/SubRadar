@@ -324,7 +324,7 @@ const CreateSubscriptionModal = ({
               },
               cardAnimatedStyle,
             ]}
-            className="overflow-hidden bg-background dark:bg-[#1a1a1a]"
+            className="overflow-hidden bg-background dark:bg-card"
           >
             {/* Drag Handle */}
             <View className="w-9 h-1 rounded-full bg-black/10 dark:bg-white/20 self-center mt-2 mb-4" />
@@ -373,7 +373,7 @@ const CreateSubscriptionModal = ({
                   {/* Autocomplete Dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
                     <View
-                      className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white dark:bg-[#1a1a1a]"
+                      className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white dark:bg-card"
                       style={{
                         shadowColor: "#000",
                         shadowOffset: { width: 0, height: 4 },

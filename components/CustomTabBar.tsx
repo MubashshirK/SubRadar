@@ -253,7 +253,7 @@ export default function CustomTabBar({
 
   return (
     <View
-      className={isDark ? "bg-[#1a1a1a]" : "bg-white"}
+      className={isDark ? "bg-card" : "bg-white"}
       style={{
         position: "absolute",
         bottom: Math.max(insets.bottom, BAR_BOTTOM),

@@ -299,7 +299,7 @@ const Insights = () => {
           <Text className="text-3xl font-sans-bold text-primary">Insights</Text>
 
           <View
-            className="flex-row rounded-full bg-white dark:bg-[#1a1a1a] p-0.5"
+            className="flex-row rounded-full bg-white dark:bg-card p-0.5"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -380,7 +380,7 @@ const Insights = () => {
         {/* Stats Row */}
         <View className="mb-8 flex-row gap-3">
           <View
-            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -401,7 +401,7 @@ const Insights = () => {
             </Text>
           </View>
           <View
-            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -418,7 +418,7 @@ const Insights = () => {
             </Text>
           </View>
           <View
-            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -538,7 +538,7 @@ const Insights = () => {
         </Text>
         <View className="mb-8 flex-row gap-3">
           <View
-            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -567,7 +567,7 @@ const Insights = () => {
             </Text>
           </View>
           <View
-            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
+            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
@@ -603,7 +603,7 @@ const Insights = () => {
         {/* Smart Insight */}
         {smartInsight && (
           <View
-            className="mb-6 flex-row gap-3 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-5"
+            className="mb-6 flex-row gap-3 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-5"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },

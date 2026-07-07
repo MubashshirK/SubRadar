@@ -159,7 +159,7 @@ const Subscriptions = () => {
                     "rounded-full border px-4 py-2",
                     activeCategory === item
                       ? "border-primary dark:border-foreground bg-primary dark:bg-foreground"
-                      : "border-border bg-card dark:bg-[#1a1a1a]",
+                      : "border-border bg-card dark:bg-card",
                   )}
                 >
                   <Text
@@ -188,6 +188,7 @@ const Subscriptions = () => {
             />
           </View>
         )}
+        extraData={expandedId}
         ItemSeparatorComponent={() => <View className="h-3" />}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
