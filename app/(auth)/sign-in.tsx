@@ -1,6 +1,7 @@
 import { useSignIn } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { Image } from "expo-image";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -11,6 +12,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+import appIconLight from "@/assets/app-icon.png";
+import appIconDark from "@/assets/app-icon-dark.png";
 import { useTheme } from "@/lib/useThemeSync";
 
 const CODE_LENGTH = 6;
@@ -234,6 +237,9 @@ export default function SignInScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="w-full max-w-[360px]">
+            <View className="items-center mb-8">
+              <Image source={isDark ? appIconDark : appIconLight} contentFit="contain" style={{ width: 72, height: 72 }} />
+            </View>
             <Text className="auth-title">Sign in</Text>
             <Text className="auth-subtitle">
               New user?{" "}
@@ -310,7 +316,7 @@ export default function SignInScreen() {
             )}
 
             {/* Forgot password */}
-            <Pressable className="mt-3 items-end">
+            <Pressable className="mt-3 items-end" onPress={() => router.push("/(auth)/forgot-password")}>
               <Text className="text-[13px] font-sans-semibold text-primary">
                 Forgot password?
               </Text>

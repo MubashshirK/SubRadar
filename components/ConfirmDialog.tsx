@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { shadowDialog } from "@/constants/shadows";
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -46,13 +47,7 @@ export default function ConfirmDialog({
         <Pressable
           onPress={(e) => e.stopPropagation()}
           className="w-full max-w-[300px] items-center rounded-2xl bg-white p-6 dark:bg-card"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: 24,
-          }}
+          style={shadowDialog}
         >
           {/* Icon */}
           <View className="mb-4 size-12 items-center justify-center rounded-full bg-destructive/10">

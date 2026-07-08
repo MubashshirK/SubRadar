@@ -4,7 +4,6 @@ import clsx from "clsx";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import * as Haptics from "expo-haptics";
-dayjs.extend(customParseFormat);
 import { Image } from "expo-image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Animated, {
@@ -34,46 +33,11 @@ import DatePicker from "@/components/DatePicker";
 import { CURRENCIES } from "@/lib/settingsStore";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { useTheme } from "@/lib/useThemeSync";
+import { CATEGORY_MAP, CATEGORY_NAMES } from "@/constants/categories";
+import { shadowSheet, shadowDropdown } from "@/constants/shadows";
+dayjs.extend(customParseFormat);
 
 type Frequency = "Monthly" | "Yearly";
-
-const CATEGORIES: ServiceCategory[] = [
-  "Entertainment",
-  "AI Tools",
-  "Developer Tools",
-  "Design",
-  "Finance",
-  "Gaming",
-  "Productivity",
-  "Cloud Storage",
-  "Music",
-  "Video",
-  "News",
-  "Education",
-  "Shopping",
-  "Communication",
-  "Security",
-  "Other",
-];
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Entertainment: "#ff6b6b",
-  "AI Tools": "#b8d4e3",
-  "Developer Tools": "#e8def8",
-  Design: "#f5c542",
-  Productivity: "#95e1d3",
-  "Cloud Storage": "#a8d8ea",
-  Music: "#f8b500",
-  Video: "#e03e3e",
-  News: "#6366f1",
-  Gaming: "#10b981",
-  Education: "#8b5cf6",
-  Finance: "#0ea5e9",
-  Shopping: "#f97316",
-  Communication: "#06b6d4",
-  Security: "#ec4899",
-  Other: "#d4d4d4",
-};
 
 function isNumericPrice(value: string): boolean {
   if (!value.trim()) return false;
@@ -279,7 +243,7 @@ const CreateSubscriptionModal = ({
       renewalDate: finalRenewalDate.toISOString(),
       icon: effectiveDomain ? { uri: getLogoUrl(effectiveDomain, 128) } : icons.plus,
       billing: frequency,
-      color: CATEGORY_COLORS[finalCategory] ?? CATEGORY_COLORS.Other,
+      color: CATEGORY_MAP[finalCategory]?.color ?? CATEGORY_MAP.Other?.color,
       domain: finalDomain,
       plan: plan.trim() || undefined,
       paymentMethod: paymentMethod.trim() || undefined,
@@ -318,12 +282,8 @@ const CreateSubscriptionModal = ({
                 maxHeight: cardMaxHeight,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: -4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 24,
-                elevation: 20,
               },
+              shadowSheet,
               cardAnimatedStyle,
             ]}
             className="overflow-hidden bg-background dark:bg-card"
@@ -333,7 +293,7 @@ const CreateSubscriptionModal = ({
 
             {/* Header */}
             <View className="flex-row items-center justify-between px-6 pb-4 border-b border-border/60">
-              <Text className="text-xl font-sans-bold text-primary">
+               <Text className="text-sheet-title">
                 {isEditing ? "Edit Subscription" : "New Subscription"}
               </Text>
               <Pressable
@@ -354,7 +314,7 @@ const CreateSubscriptionModal = ({
             >
               {/* Service Name */}
               <View>
-                <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                <Text className="text-overline mb-2">
                   Service Name
                 </Text>
                 <View className="relative">
@@ -376,13 +336,7 @@ const CreateSubscriptionModal = ({
                   {showSuggestions && suggestions.length > 0 && (
                     <View
                       className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white dark:bg-card"
-                      style={{
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 12,
-                        elevation: 8,
-                      }}
+                      style={shadowDropdown}
                     >
                       {suggestions.map((service) => (
                         <Pressable
@@ -407,13 +361,13 @@ const CreateSubscriptionModal = ({
                             className="rounded-full px-2 py-0.5"
                             style={{
                               backgroundColor:
-                                CATEGORY_COLORS[service.category] + "20",
+                                CATEGORY_MAP[service.category]?.lightColor ?? "#f3f4f6",
                             }}
                           >
                             <Text
                               className="text-[10px] font-sans-semibold"
                               style={{
-                                color: CATEGORY_COLORS[service.category],
+                                color: CATEGORY_MAP[service.category]?.color ?? "#6b7280",
                               }}
                             >
                               {service.category}
@@ -446,7 +400,7 @@ const CreateSubscriptionModal = ({
               {/* Custom Domain Input */}
               {showCustomDomain && (
                 <View>
-                  <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  <Text className="text-overline mb-2">
                     Domain
                   </Text>
                   <TextInput
@@ -491,7 +445,7 @@ const CreateSubscriptionModal = ({
 
               {/* Price */}
               <View>
-                <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                <Text className="text-overline mb-2">
                   Price
                 </Text>
                 <View
@@ -577,11 +531,11 @@ const CreateSubscriptionModal = ({
                 <View className="gap-4">
                   {/* Category */}
                   <View>
-                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    <Text className="text-overline mb-2">
                       Category
                     </Text>
                     <View className="flex-row flex-wrap gap-1.5">
-                      {CATEGORIES.map((cat) => (
+                      {CATEGORY_NAMES.map((cat) => (
                         <Pressable
                           key={cat}
                           onPress={() => setCategory(cat)}
@@ -609,7 +563,7 @@ const CreateSubscriptionModal = ({
 
                   {/* Plan */}
                   <View>
-                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    <Text className="text-overline mb-2">
                       Plan
                     </Text>
                     <TextInput
@@ -624,7 +578,7 @@ const CreateSubscriptionModal = ({
 
                   {/* Payment Method */}
                   <View>
-                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    <Text className="text-overline mb-2">
                       Payment Method
                     </Text>
                     <TextInput
@@ -639,7 +593,7 @@ const CreateSubscriptionModal = ({
 
                   {/* Start Date */}
                   <View>
-                    <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    <Text className="text-overline mb-2">
                       Start Date
                     </Text>
                     <Pressable
@@ -660,7 +614,7 @@ const CreateSubscriptionModal = ({
                   {/* Renewal Date */}
                   <View>
                     <View className="flex-row items-center justify-between mb-2">
-                      <Text className="text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground">
+                       <Text className="text-overline">
                         Renewal Date
                       </Text>
                       {renewalManuallyEdited && (

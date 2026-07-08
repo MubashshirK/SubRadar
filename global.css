@@ -394,4 +394,50 @@
   .category-chip-text-active {
     @apply text-accent;
   }
+
+  /* ─── Typography Tokens ─── */
+  /* Display: page/screen titles */
+  .text-display {
+    @apply text-[28px] font-sans-bold leading-tight text-primary;
+  }
+
+  /* Heading: section headings ("Upcoming", "All Subscriptions") */
+  .text-heading {
+    @apply text-2xl font-sans-bold text-primary;
+  }
+
+  /* Subtitle: sheet/modal titles */
+  .text-sheet-title {
+    @apply text-[17px] font-sans-bold text-primary;
+  }
+
+  /* Card title: subscription names in cards */
+  .text-card-title {
+    @apply text-[16px] font-sans-semibold text-primary;
+  }
+
+  /* Primary CTA button text */
+  .text-cta {
+    @apply text-[15px] font-sans-bold;
+  }
+
+  /* Overline: uppercase section labels */
+  .text-overline {
+    @apply text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground;
+  }
+
+  /* Body: primary content text */
+  .text-body {
+    @apply text-[15px] font-sans-medium text-primary;
+  }
+
+  /* Body small: secondary content, card meta */
+  .text-body-sm {
+    @apply text-[13px] font-sans-medium text-primary;
+  }
+
+  /* Caption: labels, hints, de-emphasized text */
+  .text-caption {
+    @apply text-[12px] font-sans-medium text-muted-foreground;
+  }
 }

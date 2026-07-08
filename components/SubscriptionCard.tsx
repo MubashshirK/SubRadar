@@ -20,6 +20,7 @@ import Animated, {
 import { getExchangeRates } from "@/lib/currency";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { useTheme } from "@/lib/useThemeSync";
+import { shadowCard } from "@/constants/shadows";
 
 const DETAIL_ICONS = {
   payment: "card-outline" as const,
@@ -142,13 +143,7 @@ const SubscriptionCard = ({
     <Pressable
       onPress={handleCardPress}
       className="sub-card"
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-      }}
+      style={shadowCard}
     >
       {/* Collapsed Row */}
       <View className="sub-card-inner">

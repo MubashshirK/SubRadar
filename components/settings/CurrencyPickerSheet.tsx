@@ -7,6 +7,7 @@ import {
 import { useTheme } from "@/lib/useThemeSync";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
+import { shadowSheet } from "@/constants/shadows";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -97,13 +98,7 @@ export default function CurrencyPickerSheet({
         {/* Sheet */}
         <View
           className="max-h-[85%] rounded-t-3xl bg-white dark:bg-card pb-8"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: 24,
-          }}
+          style={shadowSheet}
         >
           {/* Drag handle */}
           <View className="items-center pt-3">

@@ -214,7 +214,7 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
                         : "border-input"
                    } bg-background dark:bg-card`}
                 >
-                  <Text className="text-xl font-sans-bold text-primary">
+                   <Text className="text-sheet-title">
                     {code[i] || ""}
                   </Text>
                 </View>

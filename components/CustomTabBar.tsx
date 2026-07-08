@@ -10,9 +10,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "@/lib/useThemeSync";
 import * as Haptics from "expo-haptics";
+import { shadowTabBar } from "@/constants/shadows";
 
 const ICON_SIZE = 22;
-const LABEL_SIZE = 13;
 const PILL_PAD_X = 20;
 const PILL_PAD_TOP = 4;
 const PILL_PAD_BOT = 4;
@@ -106,12 +106,8 @@ function TabButton({
           />
           {isActive && (
             <Text
-              style={{
-                fontSize: LABEL_SIZE,
-                fontWeight: "600",
-                color: isDark ? "#fff" : "#191919",
-                letterSpacing: 0.2,
-              }}
+              className="text-[13px] font-sans-semibold"
+              style={{ color: isDark ? "#fff" : "#191919", letterSpacing: 0.2 }}
             >
               {tab.title}
             </Text>
@@ -266,11 +262,7 @@ export default function CustomTabBar({
         height: BAR_HEIGHT,
         borderRadius: BAR_RADIUS,
         padding: 3,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.08,
-        shadowRadius: 20,
-        elevation: 10,
+        ...shadowTabBar,
       }}
     >
       <View

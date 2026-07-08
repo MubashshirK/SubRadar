@@ -1,6 +1,7 @@
 import { useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { Image } from "expo-image";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -11,6 +12,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+import appIconLight from "@/assets/app-icon.png";
+import appIconDark from "@/assets/app-icon-dark.png";
 import { useTheme } from "@/lib/useThemeSync";
 
 const CODE_LENGTH = 6;
@@ -212,6 +215,9 @@ export default function SignUpScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="w-full max-w-90">
+            <View className="items-center mb-8">
+              <Image source={isDark ? appIconDark : appIconLight} contentFit="contain" style={{ width: 72, height: 72 }} />
+            </View>
             <Text className="auth-title">Sign up</Text>
             <Text className="auth-subtitle">
               Already have an account?{" "}

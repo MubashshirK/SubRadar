@@ -5,6 +5,7 @@ import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { getExchangeRates } from "@/lib/currency";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
+import { shadowCard } from "@/constants/shadows";
 
 const UpcomingSubscriptionCard = ({
   name,
@@ -32,13 +33,7 @@ const UpcomingSubscriptionCard = ({
 
   return (
     <View className="mr-3 w-44 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-3.5"
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-      }}
+      style={shadowCard}
     >
       <View className="flex-row items-start justify-between">
         <View
@@ -54,13 +49,13 @@ const UpcomingSubscriptionCard = ({
             <Image source={icon} style={{ width: "100%", height: "100%", borderRadius: 8 }} contentFit="cover" />
           )}
         </View>
-        <Text className="text-sm font-sans-bold text-primary">
+        <Text className="text-cta text-primary">
           {convertAndFormat(price, currency || "USD", displayCurrency, rates)}
         </Text>
       </View>
 
       <Text
-        className="mt-3 text-base font-sans-semibold text-primary"
+        className="mt-3 text-card-title"
         numberOfLines={1}
       >
         {name}

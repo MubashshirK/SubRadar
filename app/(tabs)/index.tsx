@@ -1,8 +1,11 @@
 import ConfirmDialog from "@/components/ConfirmDialog";
 import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
+import EmptyState from "@/components/EmptyState";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import HomeSkeleton from "@/components/loading/HomeSkeleton";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
+import Toast from "@/components/Toast";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import images from "@/constants/images";
 import "@/global.css";
@@ -16,8 +19,9 @@ import dayjs from "dayjs";
 import { LinearGradient } from "expo-linear-gradient";
 import { styled } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, Image, Pressable, Text, View } from "react-native";
+import { FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "@/lib/useThemeSync";
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -36,10 +40,19 @@ export default function App() {
   const [modalKey, setModalKey] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const { data: subscriptions = [], isPending } = useSubscriptions();
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const navigation = useNavigation();
+  const { data: subscriptions = [], isPending, refetch } = useSubscriptions();
   const { mutate: createSubscription } = useCreateSubscription();
   const { mutate: updateSubscription } = useUpdateSubscription();
   const { mutate: deleteSubscription } = useDeleteSubscription();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     getExchangeRates().then((r) => {
@@ -83,10 +96,16 @@ export default function App() {
 
   const handleCreateSubscription = (newSubscription: Subscription) => {
     if (editingSubscription) {
-      updateSubscription(newSubscription);
+      updateSubscription(newSubscription, {
+        onSuccess: () => setToast({ message: "Subscription updated", type: "success" }),
+        onError: () => setToast({ message: "Failed to update subscription", type: "error" }),
+      });
       setEditingSubscription(null);
     } else {
-      createSubscription(newSubscription);
+      createSubscription(newSubscription, {
+        onSuccess: () => setToast({ message: "Subscription added", type: "success" }),
+        onError: () => setToast({ message: "Failed to add subscription", type: "error" }),
+      });
     }
   };
 
@@ -108,7 +127,10 @@ export default function App() {
 
   const confirmDelete = () => {
     if (deleteTargetId) {
-      deleteSubscription(deleteTargetId);
+      deleteSubscription(deleteTargetId, {
+        onSuccess: () => setToast({ message: "Subscription deleted", type: "success" }),
+        onError: () => setToast({ message: "Failed to delete subscription", type: "error" }),
+      });
       setExpandedSubscriptionId(null);
     }
     setShowDeleteConfirm(false);
@@ -122,7 +144,7 @@ export default function App() {
     user?.emailAddresses[0]?.emailAddress ||
     "User";
 
-  if (isPending) {
+  if (isPending || refreshing) {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <HomeSkeleton />
@@ -131,6 +153,7 @@ export default function App() {
   }
 
   return (
+    <ErrorBoundary>
     <SafeAreaView className="flex-1 bg-background p-5">
       <FlatList
         ListHeaderComponent={() => (
@@ -261,14 +284,16 @@ export default function App() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
-                  <Text className="home-empty-state">
-                    No upcoming renewals yet.
-                  </Text>
+                  <View className="items-center py-3">
+                    <Text className="text-xs font-sans-medium text-muted-foreground">
+                      No renewals in the next 7 days.
+                    </Text>
+                  </View>
                 }
               />
             </View>
 
-            <ListHeading title="All Subscriptions" />
+            <ListHeading title="All Subscriptions" onActionPress={() => navigation.navigate("subscriptions" as never)} />
           </>
         )}
         data={subscriptions}
@@ -286,9 +311,23 @@ export default function App() {
         ItemSeparatorComponent={() => <View className="h-4" />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text className="home-empty-state">No subscriptions yet.</Text>
+          <EmptyState
+            icon="wallet-outline"
+            title="No subscriptions yet"
+            description="Tap the button below to add your first subscription."
+            ctaLabel="Add Subscription"
+            onCtaPress={() => openModal()}
+          />
         }
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="transparent"
+            colors={["transparent"]}
+          />
+        }
       />
 
       <CreateSubscriptionModal
@@ -307,6 +346,15 @@ export default function App() {
         message="Are you sure you want to delete this subscription? This action cannot be undone."
         confirmLabel="Delete"
       />
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }

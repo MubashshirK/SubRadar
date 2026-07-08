@@ -1,8 +1,10 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { Image, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { shadowCard } from "@/constants/shadows";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { styled } from "nativewind";
 import images from "@/constants/images";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -140,6 +142,7 @@ const Settings = () => {
   };
 
   return (
+    <ErrorBoundary>
     <SafeAreaView className="flex-1 bg-background pb-5">
       <ScrollView
         className="flex-1"
@@ -151,7 +154,10 @@ const Settings = () => {
         </Text>
 
         {/* ── Profile Card ── */}
-        <Pressable className="mb-8 flex-row items-center gap-4 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card px-5 py-5">
+        <Pressable
+          className="mb-8 flex-row items-center gap-4 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card px-5 py-5"
+          style={shadowCard}
+        >
           <Image source={avatarSource} className="size-14 rounded-full" />
           <View className="min-w-0 flex-1">
             <Text
@@ -177,7 +183,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Account
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="person-outline"
               iconColor="#2f6fed"
@@ -212,7 +218,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Subscriptions
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="card-outline"
               iconColor="#e03e3e"
@@ -268,7 +274,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Appearance
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="moon-outline"
               iconColor="#191919"
@@ -294,7 +300,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Support
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="help-circle-outline"
               iconColor="#2f6fed"
@@ -302,6 +308,7 @@ const Settings = () => {
               label="Help center"
               description="FAQs and guides"
               isFirst
+              onPress={() => Linking.openURL("https://subradar.app/help")}
             />
             <Row
               icon="chatbubble-outline"
@@ -309,6 +316,7 @@ const Settings = () => {
               iconBg="#e6f5f0"
               label="Contact us"
               description="Send us a message"
+              onPress={() => Linking.openURL("mailto:support@subradar.app")}
             />
             <Row
               icon="bug-outline"
@@ -316,6 +324,7 @@ const Settings = () => {
               iconBg="#fdecea"
               label="Report a bug"
               isLast
+              onPress={() => Linking.openURL("mailto:support@subradar.app?subject=Bug%20Report")}
             />
           </View>
         </View>
@@ -325,13 +334,14 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Legal
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="document-text-outline"
               iconColor="#9a6700"
               iconBg="#fef3cd"
               label="Terms of Service"
               isFirst
+              onPress={() => Linking.openURL("https://subradar.app/terms")}
             />
             <Row
               icon="shield-outline"
@@ -339,13 +349,15 @@ const Settings = () => {
               iconBg="#eef3fd"
               label="Privacy Policy"
               isLast
+              onPress={() => Linking.openURL("https://subradar.app/privacy")}
             />
           </View>
         </View>
 
         {/* ── Sign Out ── */}
         <Pressable
-          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-card px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
+          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
+          style={shadowCard}
           onPress={handleSignOut}
           disabled={isSigningOut}
         >
@@ -399,6 +411,7 @@ const Settings = () => {
         loading={isSigningOut}
       />
     </SafeAreaView>
+    </ErrorBoundary>
   );
 };
 
