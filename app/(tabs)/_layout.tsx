@@ -1,6 +1,6 @@
+import CustomTabBar from "@/components/CustomTabBar";
 import { useAuth } from "@clerk/expo";
 import { Redirect, Tabs } from "expo-router";
-import CustomTabBar from "@/components/CustomTabBar";
 
 const TabLayout = () => {
   const { isSignedIn, isLoaded } = useAuth();
@@ -19,7 +19,7 @@ const TabLayout = () => {
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="subscriptions" options={{ title: "Subscriptions" }} />
+      <Tabs.Screen name="subscriptions" options={{ title: "All Subs" }} />
       <Tabs.Screen name="insights" options={{ title: "Insights" }} />
       <Tabs.Screen name="settings" options={{ title: "Settings" }} />
     </Tabs>
