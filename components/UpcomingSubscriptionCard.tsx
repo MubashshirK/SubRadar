@@ -6,6 +6,7 @@ import { Image } from "expo-image";
 import { getExchangeRates } from "@/lib/currency";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { shadowCard } from "@/constants/shadows";
+import { useTheme } from "@/lib/useThemeSync";
 
 const UpcomingSubscriptionCard = ({
   name,
@@ -19,6 +20,7 @@ const UpcomingSubscriptionCard = ({
   const { data: settings } = useUserSettings();
   const displayCurrency = settings?.currency ?? "USD";
   const [rates, setRates] = useState<Record<string, number>>({});
+  const { isDark } = useTheme();
 
   useEffect(() => {
     getExchangeRates().then(setRates);
@@ -37,11 +39,11 @@ const UpcomingSubscriptionCard = ({
     >
       <View className="flex-row items-start justify-between">
         <View
-          className="size-10 items-center justify-center rounded-xl overflow-hidden bg-white"
+          className="size-10 items-center justify-center rounded-xl overflow-hidden bg-white dark:bg-transparent"
         >
           {domain ? (
             <Image
-              source={getLogoUrl(domain, 128)}
+              source={getLogoUrl(domain, 128, isDark ? "dark" : "auto")}
               style={{ width: "100%", height: "100%", borderRadius: 8 }}
               contentFit="cover"
             />

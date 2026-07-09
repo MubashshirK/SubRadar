@@ -97,7 +97,7 @@ export default function CurrencyPickerSheet({
 
         {/* Sheet */}
         <View
-          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-card pb-8"
+          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-[#252528] pb-8 dark:border dark:border-white/10"
           style={shadowSheet}
         >
           {/* Drag handle */}

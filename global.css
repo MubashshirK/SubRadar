@@ -188,7 +188,7 @@
   }
 
   .sub-icon-bg {
-    @apply size-13 items-center justify-center overflow-hidden rounded-xl bg-white;
+    @apply size-13 items-center justify-center overflow-hidden rounded-xl bg-white dark:bg-transparent;
   }
 
   .sub-name {

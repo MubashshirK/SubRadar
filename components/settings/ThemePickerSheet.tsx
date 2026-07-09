@@ -36,7 +36,7 @@ export default function ThemePickerSheet({
         onPress={onClose}
       >
         <Pressable
-          className="w-[300px] rounded-2xl bg-white dark:bg-card p-5"
+          className="w-[300px] rounded-2xl bg-white dark:bg-[#252528] p-5 dark:border dark:border-white/10"
           style={shadowDialog}
           onPress={(e) => e.stopPropagation()}
         >

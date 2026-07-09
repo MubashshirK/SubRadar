@@ -119,6 +119,23 @@ const CreateSubscriptionModal = ({
     transform: [{ translateY: cardTranslateY.value }],
   }));
 
+  const dropdownProgress = useSharedValue(0);
+
+  const dropdownAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: dropdownProgress.value,
+  }));
+
+  useEffect(() => {
+    if (showSuggestions && suggestions.length > 0) {
+      dropdownProgress.value = withTiming(1, {
+        duration: 150,
+        easing: Easing.out(Easing.quad),
+      });
+    } else {
+      dropdownProgress.value = 0;
+    }
+  }, [showSuggestions, suggestions, dropdownProgress]);
+
   const isValidForm = name.trim() !== "" && isNumericPrice(price);
 
   const effectiveDomain = domain || customDomain;
@@ -241,7 +258,7 @@ const CreateSubscriptionModal = ({
       status: "active",
       startDate: finalStartDate.toISOString(),
       renewalDate: finalRenewalDate.toISOString(),
-      icon: effectiveDomain ? { uri: getLogoUrl(effectiveDomain, 128) } : icons.plus,
+      icon: effectiveDomain ? { uri: getLogoUrl(effectiveDomain, 128, isDark ? "dark" : "auto") } : icons.plus,
       billing: frequency,
       color: CATEGORY_MAP[finalCategory]?.color ?? CATEGORY_MAP.Other?.color,
       domain: finalDomain,
@@ -334,65 +351,113 @@ const CreateSubscriptionModal = ({
 
                   {/* Autocomplete Dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
-                    <View
-                      className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-border/60 bg-white dark:bg-card"
-                      style={shadowDropdown}
+                    <Animated.View
+                      style={[
+                        dropdownAnimatedStyle,
+                        shadowDropdown,
+                        { borderColor: isDark ? "rgba(237,237,237,0.1)" : "rgba(55,53,47,0.08)" },
+                      ]}
+                      className="absolute top-full left-0 right-0 z-50 mt-1 overflow-hidden rounded-xl border bg-white dark:bg-[#1e1e22]"
                     >
-                      {suggestions.map((service) => (
-                        <Pressable
-                          key={service.domain}
-                          onPress={() => handleSelectService(service)}
-                          className="flex-row items-center gap-3 px-4 py-3 border-b border-border/30 last:border-b-0"
-                        >
-                          <Image
-                            source={{ uri: getLogoUrl(service.domain, 64) }}
-                            className="size-8 rounded-md"
-                            contentFit="contain"
-                          />
-                          <View className="flex-1">
-                            <Text className="text-sm font-sans-semibold text-primary">
-                              {service.name}
-                            </Text>
-                            <Text className="text-xs font-sans-medium text-muted-foreground">
-                              {service.domain}
-                            </Text>
-                          </View>
-                          <View
-                            className="rounded-full px-2 py-0.5"
-                            style={{
-                              backgroundColor:
-                                CATEGORY_MAP[service.category]?.lightColor ?? "#f3f4f6",
-                            }}
-                          >
-                            <Text
-                              className="text-[10px] font-sans-semibold"
-                              style={{
-                                color: CATEGORY_MAP[service.category]?.color ?? "#6b7280",
-                              }}
-                            >
-                              {service.category}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      ))}
-
-                      {/* Custom Domain Option */}
-                      <Pressable
-                        onPress={handleShowCustomDomain}
-                        className="flex-row items-center gap-3 px-4 py-3 bg-muted/50"
+                      {/* Scrollable results */}
+                      <ScrollView
+                        style={{ maxHeight: 150 }}
+                        keyboardShouldPersistTaps="handled"
+                        nestedScrollEnabled
+                        showsVerticalScrollIndicator={false}
                       >
-                        <View className="size-8 items-center justify-center rounded-md bg-muted">
-                          <Ionicons
-                            name="globe-outline"
-                            size={16}
-                  color={isDark ? "#888" : "#999"}
-                          />
-                        </View>
-                        <Text className="text-sm font-sans-medium text-muted-foreground">
-                          Enter custom domain...
-                        </Text>
-                      </Pressable>
-                    </View>
+                        {suggestions.map((service, index) => (
+                          <React.Fragment key={service.domain}>
+                            <Pressable
+                              onPress={() => handleSelectService(service)}
+                              className="flex-row items-center gap-2.5 px-3 py-2.5"
+                              style={({ pressed }) => ({
+                                backgroundColor: pressed
+                                  ? isDark
+                                    ? "rgba(237, 237, 237, 0.08)"
+                                    : "rgba(55, 53, 47, 0.05)"
+                                  : "transparent",
+                              })}
+                            >
+                              <View
+                                className="items-center justify-center"
+                                style={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: 10,
+                                  backgroundColor: isDark ? "rgba(39,39,42,0.6)" : "transparent",
+                                }}
+                              >
+                                <Image
+                                  source={{ uri: getLogoUrl(service.domain, 64, isDark ? "dark" : "auto") }}
+                                  style={{ width: 22, height: 22, borderRadius: 6 }}
+                                  contentFit="contain"
+                                />
+                              </View>
+                              <View className="flex-1 min-w-0">
+                                <Text className="text-[13px] font-sans-semibold text-primary" numberOfLines={1}>
+                                  {service.name}
+                                </Text>
+                                <Text className="text-[11px] font-sans-medium text-muted-foreground/50" numberOfLines={1}>
+                                  {service.domain}
+                                </Text>
+                              </View>
+                              <View
+                                className="shrink-0 items-center justify-center rounded-full px-1.5 py-px"
+                                style={{
+                                  borderWidth: 1,
+                                  borderColor: (CATEGORY_MAP[service.category]?.color ?? "#6b7280") + "40",
+                                  backgroundColor: (CATEGORY_MAP[service.category]?.color ?? "#6b7280") + "14",
+                                }}
+                              >
+                                <Text
+                                  className="text-[9px] font-sans-semibold"
+                                  style={{
+                                    color: CATEGORY_MAP[service.category]?.color ?? "#6b7280",
+                                  }}
+                                >
+                                  {service.category}
+                                </Text>
+                              </View>
+                            </Pressable>
+                            {index < suggestions.length - 1 && (
+                              <View className="mx-3 h-px bg-border/30" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </ScrollView>
+
+                      {/* Custom Domain Option — sticky at bottom */}
+                      <View className="border-t border-border/30">
+                        <Pressable
+                          onPress={handleShowCustomDomain}
+                          className="flex-row items-center gap-2.5 px-3 py-2.5"
+                          style={({ pressed }) => ({
+                            backgroundColor: pressed
+                              ? isDark
+                                ? "rgba(237, 237, 237, 0.08)"
+                                : "rgba(55, 53, 47, 0.05)"
+                              : isDark
+                                ? "rgba(39, 39, 42, 0.4)"
+                                : "rgba(240, 240, 239, 0.6)",
+                          })}
+                        >
+                          <View
+                            className="size-7 items-center justify-center rounded-lg"
+                            style={{ backgroundColor: isDark ? "rgba(129,140,248,0.1)" : "rgba(99,102,241,0.1)" }}
+                          >
+                            <Ionicons
+                              name="globe-outline"
+                              size={14}
+                              color={isDark ? "#818cf8" : "#6366f1"}
+                            />
+                          </View>
+                          <Text className="text-[13px] font-sans-medium text-muted-foreground">
+                            Enter custom domain...
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </Animated.View>
                   )}
                 </View>
               </View>
@@ -421,7 +486,7 @@ const CreateSubscriptionModal = ({
               {domain && !showCustomDomain && (
                 <View className="flex-row items-center gap-2 bg-muted/50 rounded-xl px-4 py-3">
                   <Image
-                    source={{ uri: getLogoUrl(domain, 64) }}
+                    source={{ uri: getLogoUrl(domain, 64, isDark ? "dark" : "auto") }}
                     className="size-6 rounded"
                     contentFit="contain"
                   />

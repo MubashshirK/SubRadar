@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { Image } from "expo-image";
 import { styled } from "nativewind";
+import { useTheme } from "@/lib/useThemeSync";
 import React, {
   useCallback,
   useEffect,
@@ -66,6 +67,7 @@ const Insights = () => {
   const [rates, setRates] = useState<Record<string, number>>({});
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const { isDark } = useTheme();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -552,7 +554,7 @@ const Insights = () => {
                     </Text>
                     {sub.domain ? (
                       <Image
-                        source={getLogoUrl(sub.domain, 128)}
+                        source={getLogoUrl(sub.domain, 128, isDark ? "dark" : "auto")}
                         style={{ width: 32, height: 32, borderRadius: 8 }}
                         contentFit="cover"
                       />

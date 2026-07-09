@@ -1,7 +1,7 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Alert, Image, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { Image, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { shadowCard } from "@/constants/shadows";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -15,6 +15,7 @@ import { CURRENCIES, ThemeMode } from "@/lib/settingsStore";
 import { useUserSettings, useUpdateUserSettings } from "@/lib/hooks/useUserSettings";
 import CurrencyPickerSheet from "@/components/settings/CurrencyPickerSheet";
 import ThemePickerSheet from "@/components/settings/ThemePickerSheet";
+import ProfessionalInfoSheet from "@/components/settings/ProfessionalInfoSheet";
 import { useTheme } from "@/lib/useThemeSync";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -23,12 +24,17 @@ type IconCircleProps = {
   name: string;
   color: string;
   bg: string;
+  isDark: boolean;
 };
 
-const IconCircle = ({ name, color, bg }: IconCircleProps) => (
+const IconCircle = ({ name, color, bg, isDark }: IconCircleProps) => (
   <View
     className="size-8 items-center justify-center rounded-full"
-    style={{ backgroundColor: bg }}
+    style={{
+      backgroundColor: isDark ? color + "14" : bg,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? color + "40" : "transparent",
+    }}
   >
     <Ionicons name={name as any} size={16} color={color} />
   </View>
@@ -43,6 +49,7 @@ type RowProps = {
   rightElement?: React.ReactNode;
   isFirst?: boolean;
   isLast?: boolean;
+  isDark: boolean;
   onPress?: () => void;
 };
 
@@ -55,6 +62,7 @@ const Row = ({
   rightElement,
   isFirst,
   isLast,
+  isDark,
   onPress,
 }: RowProps) => {
   const borderClass = !isLast ? "border-b border-border" : "";
@@ -69,7 +77,7 @@ const Row = ({
       className={`flex-row items-center gap-3.5 px-4 py-3.5 ${radiusClass} ${borderClass}`}
       onPress={onPress}
     >
-      <IconCircle name={icon} color={iconColor} bg={iconBg} />
+      <IconCircle name={icon} color={iconColor} bg={iconBg} isDark={isDark} />
       <View className="min-w-0 flex-1">
         <Text className="text-[15px] font-sans-medium text-primary">
           {label}
@@ -100,6 +108,9 @@ const Settings = () => {
   const [showChangeEmail, setShowChangeEmail] = React.useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = React.useState(false);
   const [showThemePicker, setShowThemePicker] = React.useState(false);
+  const [showHelpCenter, setShowHelpCenter] = React.useState(false);
+  const [showTerms, setShowTerms] = React.useState(false);
+  const [showPrivacy, setShowPrivacy] = React.useState(false);
   const { isDark } = useTheme();
 
   const { data: settings } = useUserSettings();
@@ -177,7 +188,10 @@ const Settings = () => {
               </Text>
             ) : null}
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#ccc" />
+          <Image
+            source={isDark ? images.appIconDark : images.appIcon}
+            className="size-10 rounded-xl"
+          />
         </Pressable>
 
         {/* ── Account ── */}
@@ -193,6 +207,7 @@ const Settings = () => {
               label="Edit profile"
               description="Name, avatar, bio"
               isFirst
+              isDark={isDark}
               onPress={() => setShowEditProfile(true)}
             />
             <Row
@@ -201,6 +216,7 @@ const Settings = () => {
               iconBg="#e6f5f0"
               label="Change password"
               description="Update your password"
+              isDark={isDark}
               onPress={() => setShowChangePassword(true)}
             />
             <Row
@@ -210,6 +226,7 @@ const Settings = () => {
               label="Email address"
               description={email || "Not set"}
               isLast
+              isDark={isDark}
               onPress={() => setShowChangeEmail(true)}
             />
           </View>
@@ -236,6 +253,7 @@ const Settings = () => {
                 />
               }
               isFirst
+              isDark={isDark}
             />
             <Row
               icon="notifications-outline"
@@ -251,6 +269,7 @@ const Settings = () => {
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
               }
+              isDark={isDark}
             />
             <Row
               icon="globe-outline"
@@ -266,6 +285,7 @@ const Settings = () => {
                 </View>
               }
               isLast
+              isDark={isDark}
               onPress={() => setShowCurrencyPicker(true)}
             />
           </View>
@@ -278,10 +298,10 @@ const Settings = () => {
           </Text>
           <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
-              icon="moon-outline"
-              iconColor="#191919"
-              iconBg="#efefed"
-              label="Dark mode"
+              icon="color-palette-outline"
+              iconColor="#8b5cf6"
+              iconBg="#f3e8ff"
+              label="Theme"
               rightElement={
                 <View className="flex-row items-center gap-1.5">
                   <Text className="text-[13px] font-sans-medium text-muted-foreground">
@@ -292,6 +312,7 @@ const Settings = () => {
               }
               isFirst
               isLast
+              isDark={isDark}
               onPress={() => setShowThemePicker(true)}
             />
           </View>
@@ -310,7 +331,8 @@ const Settings = () => {
               label="Help center"
               description="FAQs and guides"
               isFirst
-              onPress={() => Linking.openURL("https://subradar.app/help")}
+              isDark={isDark}
+              onPress={() => setShowHelpCenter(true)}
             />
             <Row
               icon="chatbubble-outline"
@@ -318,7 +340,8 @@ const Settings = () => {
               iconBg="#e6f5f0"
               label="Contact us"
               description="Send us a message"
-              onPress={() => Linking.openURL("mailto:support@subradar.app")}
+              isDark={isDark}
+              onPress={() => Linking.openURL("mailto:mubashshirk786@gmail.com")}
             />
             <Row
               icon="bug-outline"
@@ -326,7 +349,8 @@ const Settings = () => {
               iconBg="#fdecea"
               label="Report a bug"
               isLast
-              onPress={() => Linking.openURL("mailto:support@subradar.app?subject=Bug%20Report")}
+              isDark={isDark}
+              onPress={() => Linking.openURL("mailto:mubashshirk786@gmail.com?subject=Bug%20Report")}
             />
           </View>
         </View>
@@ -343,7 +367,8 @@ const Settings = () => {
               iconBg="#fef3cd"
               label="Terms of Service"
               isFirst
-              onPress={() => Linking.openURL("https://subradar.app/terms")}
+              isDark={isDark}
+              onPress={() => setShowTerms(true)}
             />
             <Row
               icon="shield-outline"
@@ -351,7 +376,8 @@ const Settings = () => {
               iconBg="#eef3fd"
               label="Privacy Policy"
               isLast
-              onPress={() => Linking.openURL("https://subradar.app/privacy")}
+              isDark={isDark}
+              onPress={() => setShowPrivacy(true)}
             />
           </View>
         </View>
@@ -363,7 +389,14 @@ const Settings = () => {
           onPress={handleSignOut}
           disabled={isSigningOut}
         >
-          <View className="size-8 items-center justify-center rounded-full bg-[#fdecea]">
+          <View
+            className="size-8 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: isDark ? "#e03e3e14" : "#fdecea",
+              borderWidth: isDark ? 1 : 0,
+              borderColor: isDark ? "#e03e3e40" : "transparent",
+            }}
+          >
             <Ionicons name="log-out-outline" size={16} color="#e03e3e" />
           </View>
           <Text className="text-[15px] font-sans-medium text-destructive">
@@ -401,6 +434,21 @@ const Settings = () => {
         onClose={() => setShowThemePicker(false)}
         selected={themeMode}
         onSelect={(mode) => updateSettings({ themeMode: mode })}
+      />
+      <ProfessionalInfoSheet
+        visible={showHelpCenter}
+        onClose={() => setShowHelpCenter(false)}
+        type="help"
+      />
+      <ProfessionalInfoSheet
+        visible={showTerms}
+        onClose={() => setShowTerms(false)}
+        type="terms"
+      />
+      <ProfessionalInfoSheet
+        visible={showPrivacy}
+        onClose={() => setShowPrivacy(false)}
+        type="privacy"
       />
 
       <ConfirmDialog

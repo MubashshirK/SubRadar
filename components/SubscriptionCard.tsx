@@ -65,7 +65,7 @@ const SubscriptionCard = ({
 
   const displayMeta = category?.trim() || plan?.trim() || "";
 
-  const imageSource = domain ? { uri: getLogoUrl(domain, 128) } : icon;
+  const imageSource = domain ? { uri: getLogoUrl(domain, 128, isDark ? "dark" : "auto") } : icon;
 
   useEffect(() => {
     getExchangeRates().then(setRates);
@@ -106,7 +106,7 @@ const SubscriptionCard = ({
       maxHeightValue.value = withTiming(0, ANIM_CONFIG);
       expandAnim.value = withTiming(0, ANIM_CONFIG);
     }
-  }, [expanded, contentHeight.value, expandAnim, hasMeasured.value, maxHeightValue]);
+  }, [expanded, contentHeight, expandAnim, hasMeasured, maxHeightValue]);
 
   const handleCardPress = () => {
     if (buttonPressRef.current) {

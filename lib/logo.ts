@@ -1,11 +1,11 @@
 import { type ServiceCategory } from "./settingsStore";
 
-export function getLogoUrl(domain: string, size = 128): string {
+export function getLogoUrl(domain: string, size = 128, theme: "auto" | "light" | "dark" = "auto"): string {
   const token = process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN;
   if (!token) {
     throw new Error("Missing EXPO_PUBLIC_LOGO_DEV_TOKEN in .env");
   }
-  return `https://img.logo.dev/${domain}?token=${token}&size=${size}&retina=true&format=png&fallback=monogram`;
+  return `https://img.logo.dev/${domain}?token=${token}&size=${size}&retina=true&format=png&fallback=monogram&theme=${theme}`;
 }
 
 export interface ServiceEntry {
