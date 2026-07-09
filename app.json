@@ -9,9 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.mubashshir.subradar",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mubashshir.subradar",
       "adaptiveIcon": {
         "backgroundColor": "#0f0f12",
         "foregroundImage": "./assets/app-icon.png"

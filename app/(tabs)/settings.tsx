@@ -1,7 +1,7 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { Alert, Image, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { shadowCard } from "@/constants/shadows";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -136,6 +136,8 @@ const Settings = () => {
     setIsSigningOut(true);
     try {
       await signOut();
+    } catch (err) {
+      console.error("[signOut] error:", err);
     } finally {
       setIsSigningOut(false);
     }

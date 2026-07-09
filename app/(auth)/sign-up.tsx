@@ -1,4 +1,4 @@
-import { useSignUp } from "@clerk/expo";
+import { useAuth, useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import { Image } from "expo-image";
@@ -15,11 +15,13 @@ import {
 import appIconLight from "@/assets/app-icon.png";
 import appIconDark from "@/assets/app-icon-dark.png";
 import { useTheme } from "@/lib/useThemeSync";
+import { SocialSignInButtons } from "@/components/SocialSignInButtons";
 
 const CODE_LENGTH = 6;
 
 export default function SignUpScreen() {
   const { signUp, errors, fetchStatus } = useSignUp();
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const { isDark } = useTheme();
   const codeInputRef = React.useRef<TextInput>(null);
@@ -103,7 +105,7 @@ export default function SignUpScreen() {
   const canSubmit = emailAddress.trim() && password && !isFetching;
   const canVerify = code.trim() && !isFetching;
 
-  if (signUp.status === "complete") return null;
+  if (isSignedIn) return null;
 
   /* ─────────── Verification code view ─────────── */
   if (isVerifying) {
@@ -303,6 +305,8 @@ export default function SignUpScreen() {
                 {isFetching ? "Creating account\u2026" : "Create account"}
               </Text>
             </Pressable>
+
+            <SocialSignInButtons />
           </View>
         </ScrollView>
 

@@ -2,7 +2,9 @@ import CustomTabBar from "@/components/CustomTabBar";
 import { OfflineBanner, useNetwork } from "@/components/OfflineBanner";
 import { useAuth } from "@clerk/expo";
 import { Redirect, Tabs } from "expo-router";
-import { View } from "react-native";
+import { ActivityIndicator, Image, useColorScheme, View } from "react-native";
+import appIconLight from "@/assets/app-icon.png";
+import appIconDark from "@/assets/app-icon-dark.png";
 
 const BANNER_HEIGHT = 52;
 
@@ -30,8 +32,21 @@ function TabContent() {
 
 const TabLayout = () => {
   const { isSignedIn, isLoaded } = useAuth();
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
 
-  if (!isLoaded) return null;
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 items-center justify-center gap-6 bg-background">
+        <Image
+          source={isDark ? appIconDark : appIconLight}
+          resizeMode="contain"
+          style={{ width: 80, height: 80 }}
+        />
+        <ActivityIndicator size="large" color={isDark ? "#ededed" : "#191919"} />
+      </View>
+    );
+  }
 
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
 
