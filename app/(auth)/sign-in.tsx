@@ -175,9 +175,9 @@ export default function SignInScreen() {
               {errors.fields.code && (
                 <View className="mb-4 flex-row items-center gap-2">
                   <View className="size-1.5 rounded-full bg-destructive" />
-                  <Text className="auth-error flex-1">
-                    {errors.fields.code.message}
-                  </Text>
+                    <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
+                      {errors.fields.code.message}
+                    </Text>
                 </View>
               )}
 
@@ -209,8 +209,8 @@ export default function SignInScreen() {
             </View>
           </ScrollView>
 
-          <View className="items-center px-8 pb-8 pt-4">
-            <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <View className="items-center px-8 pb-12 pt-4">
+            <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
               By signing in, you agree to our{" "}
               <Text className="font-sans-semibold text-primary">
                 Terms of Service
@@ -268,14 +268,17 @@ export default function SignInScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                textContentType="emailAddress"
+                autoComplete="email"
+                importantForAutofill="yes"
               />
             </View>
             {(localErrors.email || errors.fields.identifier) && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
-                  {localErrors.email ?? errors.fields.identifier!.message}
-                </Text>
+                  <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
+                    {localErrors.email ?? errors.fields.identifier!.message}
+                  </Text>
               </View>
             )}
 
@@ -296,6 +299,9 @@ export default function SignInScreen() {
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                textContentType="password"
+                autoComplete="password"
+                importantForAutofill="yes"
               />
               <Pressable
                 className="auth-eye"
@@ -311,9 +317,9 @@ export default function SignInScreen() {
             {errors.fields.password && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
-                  {errors.fields.password.message}
-                </Text>
+                  <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
+                    {errors.fields.password.message}
+                  </Text>
               </View>
             )}
 
@@ -340,7 +346,7 @@ export default function SignInScreen() {
         </ScrollView>
 
         <View className="items-center px-8 pb-8 pt-4">
-          <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
             By signing in, you agree to our{" "}
             <Text className="font-sans-semibold text-primary">
               Terms of Service

@@ -120,7 +120,7 @@ export default function SignUpScreen() {
             contentContainerClassName="grow items-center justify-center px-8"
             keyboardShouldPersistTaps="handled"
           >
-            <View className="w-full max-w-90">
+            <View className="w-full max-w-[360px]">
               <Text className="auth-title">Check your inbox</Text>
               <Text className="auth-subtitle mt-2">
                 We sent a verification code to{"\n"}
@@ -163,7 +163,7 @@ export default function SignUpScreen() {
               {errors.fields.code && (
                 <View className="mb-4 flex-row items-center gap-2">
                   <View className="size-1.5 rounded-full bg-destructive" />
-                  <Text className="auth-error flex-1">
+                  <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
                     {errors.fields.code.message}
                   </Text>
                 </View>
@@ -187,8 +187,8 @@ export default function SignUpScreen() {
             </View>
           </ScrollView>
 
-          <View className="items-center px-8 pb-8 pt-4">
-            <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <View className="items-center px-8 pb-12 pt-4">
+            <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
               By signing up, you agree to our{" "}
               <Text className="font-sans-semibold text-primary">
                 Terms of Service
@@ -216,7 +216,7 @@ export default function SignUpScreen() {
           contentContainerClassName="grow items-center justify-center px-8"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="w-full max-w-90">
+          <View className="w-full max-w-[360px]">
             <View className="items-center mb-8">
               <Image source={isDark ? appIconDark : appIconLight} contentFit="contain" style={{ width: 72, height: 72 }} />
             </View>
@@ -251,7 +251,7 @@ export default function SignUpScreen() {
             {(localErrors.email || errors.fields.emailAddress) && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
+                <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
                   {localErrors.email ?? errors.fields.emailAddress!.message}
                 </Text>
               </View>
@@ -289,7 +289,7 @@ export default function SignUpScreen() {
             {(localErrors.password || errors.fields.password) && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
+                <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
                   {localErrors.password ?? errors.fields.password!.message}
                 </Text>
               </View>
@@ -311,7 +311,7 @@ export default function SignUpScreen() {
         </ScrollView>
 
         <View className="items-center px-8 pb-8 pt-4">
-          <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
             By signing up, you agree to our{" "}
             <Text className="font-sans-semibold text-primary">
               Terms of Service

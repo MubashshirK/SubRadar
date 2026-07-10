@@ -11,7 +11,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import EditProfileSheet from "@/components/settings/EditProfileSheet";
 import ChangePasswordSheet from "@/components/settings/ChangePasswordSheet";
 import ChangeEmailSheet from "@/components/settings/ChangeEmailSheet";
-import { CURRENCIES, ThemeMode } from "@/lib/settingsStore";
+import { CURRENCIES, ThemeMode, useSettingsStore } from "@/lib/settingsStore";
 import { useUserSettings, useUpdateUserSettings } from "@/lib/hooks/useUserSettings";
 import CurrencyPickerSheet from "@/components/settings/CurrencyPickerSheet";
 import ThemePickerSheet from "@/components/settings/ThemePickerSheet";
@@ -116,12 +116,16 @@ const Settings = () => {
   const { data: settings } = useUserSettings();
   const { mutate: updateSettings } = useUpdateUserSettings();
 
+  const themeMode = useSettingsStore((s) => s.themeMode);
+  const billingAlertEnabled = useSettingsStore((s) => s.billingAlertEnabled);
+  const billingAlertDays = useSettingsStore((s) => s.billingAlertDays);
+  const renewalReminderEnabled = useSettingsStore((s) => s.renewalReminderEnabled);
+  const renewalReminderDays = useSettingsStore((s) => s.renewalReminderDays);
+  const setThemeMode = useSettingsStore((s) => s.setThemeMode);
+  const setBillingAlertEnabled = useSettingsStore((s) => s.setBillingAlertEnabled);
+  const setRenewalReminderEnabled = useSettingsStore((s) => s.setRenewalReminderEnabled);
+
   const currency = settings?.currency ?? "USD";
-  const themeMode = settings?.themeMode ?? "system";
-  const billingAlertEnabled = settings?.billingAlertEnabled ?? false;
-  const billingAlertDays = settings?.billingAlertDays ?? 3;
-  const renewalReminderEnabled = settings?.renewalReminderEnabled ?? false;
-  const renewalReminderDays = settings?.renewalReminderDays ?? 1;
 
   const currencyObj = CURRENCIES.find((c) => c.code === currency);
   const currencyLabel = currencyObj ? `${currencyObj.symbol} ${currencyObj.code}` : currency;
@@ -247,7 +251,7 @@ const Settings = () => {
               rightElement={
                 <Switch
                   value={billingAlertEnabled}
-                  onValueChange={(value) => updateSettings({ billingAlertEnabled: value })}
+                  onValueChange={(value) => setBillingAlertEnabled(value)}
                   trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#e03e3e" }}
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
@@ -264,7 +268,7 @@ const Settings = () => {
               rightElement={
                 <Switch
                   value={renewalReminderEnabled}
-                  onValueChange={(value) => updateSettings({ renewalReminderEnabled: value })}
+                  onValueChange={(value) => setRenewalReminderEnabled(value)}
                   trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#ea7a53" }}
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
@@ -433,7 +437,7 @@ const Settings = () => {
         visible={showThemePicker}
         onClose={() => setShowThemePicker(false)}
         selected={themeMode}
-        onSelect={(mode) => updateSettings({ themeMode: mode })}
+        onSelect={(mode) => setThemeMode(mode)}
       />
       <ProfessionalInfoSheet
         visible={showHelpCenter}

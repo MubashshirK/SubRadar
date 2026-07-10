@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const CURRENCIES = [
   { code: "USD", symbol: "$", label: "US Dollar", flag: "🇺🇸", region: "Americas" as const },
@@ -68,53 +70,59 @@ export interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>()(
-  (set) => ({
-    currency: "USD",
-    themeMode: "system",
-    billingAlertEnabled: false,
-    billingAlertDays: 3,
-    renewalReminderEnabled: false,
-    renewalReminderDays: 1,
-    customCategories: [],
-    hasOnboarded: false,
+  persist(
+    (set) => ({
+      currency: "USD",
+      themeMode: "system",
+      billingAlertEnabled: false,
+      billingAlertDays: 3,
+      renewalReminderEnabled: false,
+      renewalReminderDays: 1,
+      customCategories: [],
+      hasOnboarded: false,
 
-    setCurrency: (currency) => set({ currency }),
-    setThemeMode: (themeMode) => set({ themeMode }),
-    setBillingAlertEnabled: (billingAlertEnabled) =>
-      set({ billingAlertEnabled }),
-    setBillingAlertDays: (billingAlertDays) => set({ billingAlertDays }),
-    setRenewalReminderEnabled: (renewalReminderEnabled) =>
-      set({ renewalReminderEnabled }),
-    setRenewalReminderDays: (renewalReminderDays) =>
-      set({ renewalReminderDays }),
-    addCategory: (category) =>
-      set((state) => ({
-        customCategories: [...state.customCategories, category],
-      })),
-    removeCategory: (category) =>
-      set((state) => ({
-        customCategories: state.customCategories.filter((c) => c !== category),
-      })),
-    setOnboarded: () => set({ hasOnboarded: true }),
+      setCurrency: (currency) => set({ currency }),
+      setThemeMode: (themeMode) => set({ themeMode }),
+      setBillingAlertEnabled: (billingAlertEnabled) =>
+        set({ billingAlertEnabled }),
+      setBillingAlertDays: (billingAlertDays) => set({ billingAlertDays }),
+      setRenewalReminderEnabled: (renewalReminderEnabled) =>
+        set({ renewalReminderEnabled }),
+      setRenewalReminderDays: (renewalReminderDays) =>
+        set({ renewalReminderDays }),
+      addCategory: (category) =>
+        set((state) => ({
+          customCategories: [...state.customCategories, category],
+        })),
+      removeCategory: (category) =>
+        set((state) => ({
+          customCategories: state.customCategories.filter((c) => c !== category),
+        })),
+      setOnboarded: () => set({ hasOnboarded: true }),
 
-    importSettings: (settings) =>
-      set((state) => ({
-        ...state,
-        ...settings,
-      })),
+      importSettings: (settings) =>
+        set((state) => ({
+          ...state,
+          ...settings,
+        })),
 
-    resetSettings: () =>
-      set({
-        currency: "USD",
-        themeMode: "system",
-        billingAlertEnabled: false,
-        billingAlertDays: 3,
-        renewalReminderEnabled: false,
-        renewalReminderDays: 1,
-        customCategories: [],
-        hasOnboarded: false,
-      }),
-  }),
+      resetSettings: () =>
+        set({
+          currency: "USD",
+          themeMode: "system",
+          billingAlertEnabled: false,
+          billingAlertDays: 3,
+          renewalReminderEnabled: false,
+          renewalReminderDays: 1,
+          customCategories: [],
+          hasOnboarded: false,
+        }),
+    }),
+    {
+      name: "subradar-settings",
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
 );
 
 export const ALL_CATEGORIES = [

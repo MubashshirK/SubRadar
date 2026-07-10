@@ -9,11 +9,6 @@ import { useAuthTokenReady } from "@/lib/authStore";
 function dbRowToSettings(row: any): Partial<SettingsState> {
   return {
     currency: row.currency ?? "USD",
-    themeMode: (row.theme_mode as SettingsState["themeMode"]) ?? "system",
-    billingAlertEnabled: row.billing_alert_enabled ?? false,
-    billingAlertDays: row.billing_alert_days ?? 3,
-    renewalReminderEnabled: row.renewal_reminder_enabled ?? false,
-    renewalReminderDays: row.renewal_reminder_days ?? 1,
     customCategories: row.custom_categories ?? [],
     hasOnboarded: row.has_onboarded ?? false,
   };
@@ -26,11 +21,6 @@ function settingsToDbRow(
   return {
     user_id: userId,
     currency: settings.currency ?? "USD",
-    theme_mode: settings.themeMode ?? "system",
-    billing_alert_enabled: settings.billingAlertEnabled ?? false,
-    billing_alert_days: settings.billingAlertDays ?? 3,
-    renewal_reminder_enabled: settings.renewalReminderEnabled ?? false,
-    renewal_reminder_days: settings.renewalReminderDays ?? 1,
     custom_categories: settings.customCategories ?? [],
     has_onboarded: settings.hasOnboarded ?? false,
   };
@@ -80,18 +70,13 @@ export function useUpdateUserSettings() {
       if (fetchError) throw fetchError;
 
       // Merge: defaults ← existing ← partial update
-      const merged: SettingsState = {
+      const merged = {
         currency: "USD",
-        themeMode: "system",
-        billingAlertEnabled: false,
-        billingAlertDays: 3,
-        renewalReminderEnabled: false,
-        renewalReminderDays: 1,
         customCategories: [],
         hasOnboarded: false,
         ...(current ? dbRowToSettings(current) : {}),
         ...settings,
-      };
+      } as SettingsState;
 
       const dbRow = settingsToDbRow(merged, userId);
 
@@ -115,10 +100,6 @@ export function useUpdateUserSettings() {
       const previous = queryClient.getQueryData(qk);
       if (previous) {
         queryClient.setQueryData(qk, { ...previous, ...newSettings });
-      }
-      // Sync theme to Zustand so ThemeProvider applies it immediately
-      if (newSettings.themeMode) {
-        useSettingsStore.getState().setThemeMode(newSettings.themeMode);
       }
       return { previous };
     },
