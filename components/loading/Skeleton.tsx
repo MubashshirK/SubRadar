@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { DimensionValue, View } from "react-native";
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withRepeat,
   withTiming,
   Easing,
@@ -24,19 +23,15 @@ export function Skeleton({
   className,
 }: SkeletonProps) {
   const { isDark } = useTheme();
-  const shimmerX = useSharedValue(-1);
+  const shimmerX = useSharedValue(-200);
 
   useEffect(() => {
     shimmerX.value = withRepeat(
-      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+      withTiming(200, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
       -1,
       false,
     );
   }, [shimmerX]);
-
-  const shimmerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shimmerX.value * 200 }],
-  }));
 
   const shimmerColors: [string, string, string] = isDark
     ? ["rgba(255,255,255,0)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0)"]
@@ -48,16 +43,14 @@ export function Skeleton({
       style={{ width, height, borderRadius }}
     >
       <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          },
-          shimmerStyle,
-        ]}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          transform: [{ translateX: shimmerX }],
+        }}
       >
         <LinearGradient
           colors={shimmerColors}

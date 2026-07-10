@@ -3,12 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withTiming,
   Easing,
 } from "react-native-reanimated";
@@ -115,15 +113,7 @@ const CreateSubscriptionModal = ({
 
   const cardTranslateY = useSharedValue(screenHeight);
 
-  const cardAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: cardTranslateY.value }],
-  }));
-
   const dropdownProgress = useSharedValue(0);
-
-  const dropdownAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: dropdownProgress.value,
-  }));
 
   useEffect(() => {
     if (showSuggestions && suggestions.length > 0) {
@@ -168,14 +158,12 @@ const CreateSubscriptionModal = ({
 
   useEffect(() => {
     if (visible) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setIsModalVisible(true);
       cardTranslateY.value = withTiming(0, {
         duration: 350,
         easing: Easing.out(Easing.cubic),
       });
     } else {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       cardTranslateY.value = withTiming(screenHeight, {
         duration: 300,
         easing: Easing.in(Easing.cubic),
@@ -222,8 +210,6 @@ const CreateSubscriptionModal = ({
 
   const handleSubmit = () => {
     if (!isValidForm) return;
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const priceVal = parseFloat(price);
     const startParsed = dayjs(startDateStr, "MM/DD/YYYY", true);
@@ -301,7 +287,7 @@ const CreateSubscriptionModal = ({
                 borderTopRightRadius: 24,
               },
               shadowSheet,
-              cardAnimatedStyle,
+              { transform: [{ translateY: cardTranslateY }] },
             ]}
             className="overflow-hidden bg-background dark:bg-card"
           >
@@ -353,7 +339,7 @@ const CreateSubscriptionModal = ({
                   {showSuggestions && suggestions.length > 0 && (
                     <Animated.View
                       style={[
-                        dropdownAnimatedStyle,
+                        { opacity: dropdownProgress },
                         shadowDropdown,
                         { borderColor: isDark ? "rgba(237,237,237,0.1)" : "rgba(55,53,47,0.08)" },
                       ]}

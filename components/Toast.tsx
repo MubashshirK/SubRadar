@@ -4,7 +4,6 @@ import { Text, View } from "react-native";
 import { shadowToast } from "@/constants/shadows";
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
@@ -53,14 +52,9 @@ export default function Toast({ message, type = "success", onDismiss }: ToastPro
     return () => clearTimeout(timer);
   }, [onDismiss, opacity, translateY]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
   return (
     <Animated.View
-      style={[animatedStyle, shadowToast]}
+      style={[{ opacity, transform: [{ translateY }] }, shadowToast]}
       className="absolute top-12 left-5 right-5 z-50 overflow-hidden rounded-2xl border border-white/20 dark:border-white/5"
     >
       <View className="flex-row items-center bg-muted">

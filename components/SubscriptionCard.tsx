@@ -13,7 +13,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -75,38 +74,34 @@ const SubscriptionCard = ({
     return convertAndFormat(value, subCurrency || currency || "USD", displayCurrency, rates);
   };
 
+  const [measured, setMeasured] = useState(false);
   const expandAnim = useSharedValue(0);
   const contentHeight = useSharedValue(0);
   const maxHeightValue = useSharedValue(0);
-  const hasMeasured = useSharedValue(false);
+  const measuredRef = useRef(false);
   const buttonPressRef = useRef(false);
-
-  const detailsStyle = useAnimatedStyle(() => ({
-    opacity: expandAnim.value,
-    maxHeight: hasMeasured.value ? maxHeightValue.value : undefined,
-    overflow: "hidden" as const,
-  }));
 
   const handleLayout = (e: { nativeEvent: { layout: { height: number } } }) => {
     const height = e.nativeEvent.layout.height;
-    if (height > 0 && !hasMeasured.value) {
-      hasMeasured.value = true;
+    if (height > 0 && !measuredRef.current) {
+      measuredRef.current = true;
       contentHeight.value = height;
       maxHeightValue.value = expanded ? height : 0;
       expandAnim.value = expanded ? 1 : 0;
+      setMeasured(true);
     }
   };
 
   useEffect(() => {
     const ANIM_CONFIG = { duration: 250, easing: Easing.out(Easing.cubic) };
-    if (expanded && hasMeasured.value) {
+    if (expanded && measured) {
       maxHeightValue.value = withTiming(contentHeight.value, ANIM_CONFIG);
       expandAnim.value = withTiming(1, ANIM_CONFIG);
     } else if (!expanded) {
       maxHeightValue.value = withTiming(0, ANIM_CONFIG);
       expandAnim.value = withTiming(0, ANIM_CONFIG);
     }
-  }, [expanded, contentHeight, expandAnim, hasMeasured, maxHeightValue]);
+  }, [expanded, measured, contentHeight, expandAnim, maxHeightValue]);
 
   const handleCardPress = () => {
     if (buttonPressRef.current) {
@@ -199,7 +194,13 @@ const SubscriptionCard = ({
       </View>
 
       {/* Expanded Details */}
-      <Animated.View style={detailsStyle}>
+      <Animated.View
+        style={{
+          opacity: expandAnim,
+          maxHeight: measured ? (maxHeightValue as any) : undefined,
+          overflow: "hidden",
+        }}
+      >
         <View
           onLayout={handleLayout}
           className="border-t border-border/40 px-4 pb-4 pt-3"
