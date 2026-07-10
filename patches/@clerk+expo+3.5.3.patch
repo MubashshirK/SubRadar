@@ -1,0 +1,26 @@
+diff --git a/node_modules/@clerk/expo/dist/specs/NativeClerkGoogleSignIn.android.js b/node_modules/@clerk/expo/dist/specs/NativeClerkGoogleSignIn.android.js
+index 5d039bc..68051a1 100644
+--- a/node_modules/@clerk/expo/dist/specs/NativeClerkGoogleSignIn.android.js
++++ b/node_modules/@clerk/expo/dist/specs/NativeClerkGoogleSignIn.android.js
+@@ -1,7 +1,7 @@
+ let expo = require("expo");
+ 
+ //#region src/specs/NativeClerkGoogleSignIn.android.ts
+-var NativeClerkGoogleSignIn_android_default = (0, expo.requireNativeModule)("ClerkGoogleSignIn");
++var NativeClerkGoogleSignIn_android_default = (0, expo.requireOptionalNativeModule)("ClerkGoogleSignIn");
+ 
+ //#endregion
+ module.exports = NativeClerkGoogleSignIn_android_default;
+diff --git a/node_modules/@clerk/expo/dist/specs/NativeClerkModule.android.js b/node_modules/@clerk/expo/dist/specs/NativeClerkModule.android.js
+index deba0f1..bfcffcb 100644
+--- a/node_modules/@clerk/expo/dist/specs/NativeClerkModule.android.js
++++ b/node_modules/@clerk/expo/dist/specs/NativeClerkModule.android.js
+@@ -1,7 +1,7 @@
+ let expo = require("expo");
+ 
+ //#region src/specs/NativeClerkModule.android.ts
+-var NativeClerkModule_android_default = (0, expo.requireNativeModule)("ClerkExpo");
++var NativeClerkModule_android_default = (0, expo.requireOptionalNativeModule)("ClerkExpo");
+ 
+ //#endregion
+ module.exports = NativeClerkModule_android_default;

@@ -8,10 +8,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
-    "@clerk/expo": "^3.5.3",
+    "@clerk/expo": "3.5.3",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
@@ -26,6 +27,7 @@
     "dayjs": "^1.11.21",
     "expo": "~54.0.34",
     "expo-application": "~7.0.8",
+    "expo-auth-session": "~7.0.11",
     "expo-constants": "~18.0.13",
     "expo-file-system": "~19.0.23",
     "expo-font": "~14.0.11",
@@ -62,7 +64,9 @@
     "babel-preset-expo": "^57.0.1",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "patch-package": "^8.0.1",
     "postcss": "^8.5.15",
+    "postinstall-postinstall": "^2.1.0",
     "tailwindcss": "^4.3.1",
     "typescript": "~5.9.2"
   },
