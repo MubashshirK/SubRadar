@@ -34,6 +34,7 @@ export default function SignUpScreen() {
     email?: string;
     password?: string;
   }>({});
+  const [apiError, setApiError] = React.useState("");
 
   const validate = (): boolean => {
     const next: { email?: string; password?: string } = {};
@@ -52,13 +53,19 @@ export default function SignUpScreen() {
   const handleSubmit = async () => {
     if (!validate()) return;
 
+    setApiError("");
+
     const { error } = await signUp.password({
       emailAddress: emailAddress.trim(),
       password,
     });
 
     if (error) {
-      console.error(JSON.stringify(error, null, 2));
+      const msg = (error as any)?.errors?.[0]?.longMessage
+        || (error as any)?.errors?.[0]?.message
+        || error.message
+        || "Something went wrong";
+      setApiError(msg);
       return;
     }
 
@@ -242,6 +249,7 @@ export default function SignUpScreen() {
                   setEmailAddress(v);
                   if (localErrors.email)
                     setLocalErrors((p) => ({ ...p, email: undefined }));
+                  if (apiError) setApiError("");
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -271,6 +279,7 @@ export default function SignUpScreen() {
                   setPassword(v);
                   if (localErrors.password)
                     setLocalErrors((p) => ({ ...p, password: undefined }));
+                  if (apiError) setApiError("");
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -294,6 +303,13 @@ export default function SignUpScreen() {
                 </Text>
               </View>
             )}
+
+            {apiError ? (
+              <View className="mt-4 flex-row items-center gap-2">
+                <View className="size-1.5 rounded-full bg-destructive" />
+                <Text className="flex-1 text-[12px] font-sans-medium text-destructive">{apiError}</Text>
+              </View>
+            ) : null}
 
             {/* Create account button */}
             <Pressable

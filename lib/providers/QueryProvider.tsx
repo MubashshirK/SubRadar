@@ -7,7 +7,6 @@ import {
   clearSupabaseAuth,
   loadSupabaseJWT,
 } from "@/lib/authProvider";
-import { useSettingsStore } from "@/lib/settingsStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
@@ -60,11 +59,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [isSignedIn, getToken]);
 
-  // Set theme to system on login; clear cache on sign-out
+  // Clear cache on sign-out
   useEffect(() => {
-    if (!prevSignedIn.current && isSignedIn) {
-      useSettingsStore.getState().setThemeMode("system");
-    }
     if (prevSignedIn.current && !isSignedIn) {
       queryClient.clear();
       AsyncStorage.removeItem("SUB_RADAR_QUERY_CACHE");
