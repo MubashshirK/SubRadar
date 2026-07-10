@@ -15,8 +15,8 @@
     "android": {
       "package": "com.mubashshir.subradar",
       "adaptiveIcon": {
-        "backgroundColor": "#0f0f12",
-        "foregroundImage": "./assets/app-icon.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -43,12 +43,12 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/PlusJakartaSans-Regular.tff",
-            "./assets/fonts/PlusJakartaSans-Bold.tff",
-            "./assets/fonts/PlusJakartaSans-Medium.tff",
-            "./assets/fonts/PlusJakartaSans-SemiBold.tff",
-            "./assets/fonts/PlusJakartaSans-ExtraBold.tff",
-            "./assets/fonts/PlusJakartaSans-Light.tff"
+            "./assets/fonts/PlusJakartaSans-Regular.ttf",
+            "./assets/fonts/PlusJakartaSans-Bold.ttf",
+            "./assets/fonts/PlusJakartaSans-Medium.ttf",
+            "./assets/fonts/PlusJakartaSans-SemiBold.ttf",
+            "./assets/fonts/PlusJakartaSans-ExtraBold.ttf",
+            "./assets/fonts/PlusJakartaSans-Light.ttf"
           ]
         }
       ],
@@ -59,6 +59,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "98f66938-6223-46c3-8a43-d1c66319ec25"
+      }
+    },
+    "owner": "mubashshirkhan"
   }
 }
