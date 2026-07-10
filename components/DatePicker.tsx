@@ -3,9 +3,10 @@ import clsx from "clsx";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import React, { useEffect, useMemo, useState } from "react";
-dayjs.extend(customParseFormat);
 import { Modal, Pressable, Text, View } from "react-native";
 import { useTheme } from "@/lib/useThemeSync";
+import { shadowDialog } from "@/constants/shadows";
+dayjs.extend(customParseFormat);
 
 interface DatePickerProps {
   visible: boolean;
@@ -96,14 +97,8 @@ export default function DatePicker({
         onPress={onCancel}
       >
         <Pressable
-          className="w-[340px] rounded-2xl bg-white dark:bg-[#1a1a1a] p-5"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 24,
-            elevation: 12,
-          }}
+          className="w-[340px] rounded-2xl bg-white dark:bg-card p-5"
+          style={shadowDialog}
           onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -200,7 +195,7 @@ export default function DatePicker({
                 selectedDay === null && "opacity-40",
               )}
             >
-              <Text className="text-sm font-sans-bold text-white dark:text-background">
+              <Text className="text-cta text-white dark:text-background">
                 Confirm
               </Text>
             </Pressable>

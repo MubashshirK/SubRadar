@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useTheme } from "@/lib/useThemeSync";
+import { shadowSheet } from "@/constants/shadows";
 
 type SheetProps = {
   visible: boolean;
@@ -41,14 +42,8 @@ export default function Sheet({
 
         {/* Sheet */}
         <View
-          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-[#1a1a1a] pb-8"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: 24,
-          }}
+          className="max-h-[85%] rounded-t-3xl bg-white dark:bg-[#252528] pb-8 dark:border dark:border-white/10"
+          style={shadowSheet}
         >
           {/* Drag handle */}
           <View className="items-center pt-3">
@@ -62,7 +57,7 @@ export default function Sheet({
             </Text>
             <Pressable
               onPress={onClose}
-              className="size-8 items-center justify-center rounded-full bg-black/10 dark:bg-white/15"
+              className="size-8 items-center justify-center rounded-full bg-muted"
             >
               <Ionicons name="close" size={16} color={isDark ? "#888" : "#666"} />
             </Pressable>

@@ -1,6 +1,7 @@
-import { useSignIn } from "@clerk/expo";
+import { useAuth, useSignIn } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { Image } from "expo-image";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -11,12 +12,16 @@ import {
   TextInput,
   View,
 } from "react-native";
+import appIconLight from "@/assets/app-icon.png";
+import appIconDark from "@/assets/app-icon-dark.png";
 import { useTheme } from "@/lib/useThemeSync";
+import { SocialSignInButtons } from "@/components/SocialSignInButtons";
 
 const CODE_LENGTH = 6;
 
 export default function SignInScreen() {
   const { signIn, errors, fetchStatus } = useSignIn();
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const { isDark } = useTheme();
   const codeInputRef = React.useRef<TextInput>(null);
@@ -112,7 +117,7 @@ export default function SignInScreen() {
   const canSubmit = emailAddress.trim() && password && !isFetching;
   const canVerify = code.trim() && !isFetching;
 
-  if (signIn.status === "complete") return null;
+  if (isSignedIn) return null;
 
   /* ─────────── Verification code view ─────────── */
   if (signIn.status === "needs_client_trust") {
@@ -170,9 +175,9 @@ export default function SignInScreen() {
               {errors.fields.code && (
                 <View className="mb-4 flex-row items-center gap-2">
                   <View className="size-1.5 rounded-full bg-destructive" />
-                  <Text className="auth-error flex-1">
-                    {errors.fields.code.message}
-                  </Text>
+                    <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
+                      {errors.fields.code.message}
+                    </Text>
                 </View>
               )}
 
@@ -204,8 +209,8 @@ export default function SignInScreen() {
             </View>
           </ScrollView>
 
-          <View className="items-center px-8 pb-8 pt-4">
-            <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <View className="items-center px-8 pb-12 pt-4">
+            <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
               By signing in, you agree to our{" "}
               <Text className="font-sans-semibold text-primary">
                 Terms of Service
@@ -234,6 +239,9 @@ export default function SignInScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="w-full max-w-[360px]">
+            <View className="items-center mb-8">
+              <Image source={isDark ? appIconDark : appIconLight} contentFit="contain" style={{ width: 72, height: 72 }} />
+            </View>
             <Text className="auth-title">Sign in</Text>
             <Text className="auth-subtitle">
               New user?{" "}
@@ -260,14 +268,17 @@ export default function SignInScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                textContentType="emailAddress"
+                autoComplete="email"
+                importantForAutofill="yes"
               />
             </View>
             {(localErrors.email || errors.fields.identifier) && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
-                  {localErrors.email ?? errors.fields.identifier!.message}
-                </Text>
+                  <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
+                    {localErrors.email ?? errors.fields.identifier!.message}
+                  </Text>
               </View>
             )}
 
@@ -288,6 +299,9 @@ export default function SignInScreen() {
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                textContentType="password"
+                autoComplete="password"
+                importantForAutofill="yes"
               />
               <Pressable
                 className="auth-eye"
@@ -303,14 +317,14 @@ export default function SignInScreen() {
             {errors.fields.password && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
-                  {errors.fields.password.message}
-                </Text>
+                  <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
+                    {errors.fields.password.message}
+                  </Text>
               </View>
             )}
 
             {/* Forgot password */}
-            <Pressable className="mt-3 items-end">
+            <Pressable className="mt-3 items-end" onPress={() => router.push("/(auth)/forgot-password")}>
               <Text className="text-[13px] font-sans-semibold text-primary">
                 Forgot password?
               </Text>
@@ -326,11 +340,13 @@ export default function SignInScreen() {
                 {isFetching ? "Signing in\u2026" : "Login"}
               </Text>
             </Pressable>
+
+            <SocialSignInButtons />
           </View>
         </ScrollView>
 
         <View className="items-center px-8 pb-8 pt-4">
-          <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
             By signing in, you agree to our{" "}
             <Text className="font-sans-semibold text-primary">
               Terms of Service

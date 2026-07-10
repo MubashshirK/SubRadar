@@ -1,16 +1,21 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { Image, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { shadowCard } from "@/constants/shadows";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { styled } from "nativewind";
 import images from "@/constants/images";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import EditProfileSheet from "@/components/settings/EditProfileSheet";
 import ChangePasswordSheet from "@/components/settings/ChangePasswordSheet";
 import ChangeEmailSheet from "@/components/settings/ChangeEmailSheet";
-import { useSettingsStore, CURRENCIES, ThemeMode } from "@/lib/settingsStore";
+import { CURRENCIES, ThemeMode, useSettingsStore } from "@/lib/settingsStore";
+import { useUserSettings, useUpdateUserSettings } from "@/lib/hooks/useUserSettings";
 import CurrencyPickerSheet from "@/components/settings/CurrencyPickerSheet";
 import ThemePickerSheet from "@/components/settings/ThemePickerSheet";
+import ProfessionalInfoSheet from "@/components/settings/ProfessionalInfoSheet";
 import { useTheme } from "@/lib/useThemeSync";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -19,12 +24,17 @@ type IconCircleProps = {
   name: string;
   color: string;
   bg: string;
+  isDark: boolean;
 };
 
-const IconCircle = ({ name, color, bg }: IconCircleProps) => (
+const IconCircle = ({ name, color, bg, isDark }: IconCircleProps) => (
   <View
     className="size-8 items-center justify-center rounded-full"
-    style={{ backgroundColor: bg }}
+    style={{
+      backgroundColor: isDark ? color + "14" : bg,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? color + "40" : "transparent",
+    }}
   >
     <Ionicons name={name as any} size={16} color={color} />
   </View>
@@ -39,6 +49,7 @@ type RowProps = {
   rightElement?: React.ReactNode;
   isFirst?: boolean;
   isLast?: boolean;
+  isDark: boolean;
   onPress?: () => void;
 };
 
@@ -51,6 +62,7 @@ const Row = ({
   rightElement,
   isFirst,
   isLast,
+  isDark,
   onPress,
 }: RowProps) => {
   const borderClass = !isLast ? "border-b border-border" : "";
@@ -65,7 +77,7 @@ const Row = ({
       className={`flex-row items-center gap-3.5 px-4 py-3.5 ${radiusClass} ${borderClass}`}
       onPress={onPress}
     >
-      <IconCircle name={icon} color={iconColor} bg={iconBg} />
+      <IconCircle name={icon} color={iconColor} bg={iconBg} isDark={isDark} />
       <View className="min-w-0 flex-1">
         <Text className="text-[15px] font-sans-medium text-primary">
           {label}
@@ -90,26 +102,30 @@ const Settings = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = React.useState(false);
   const [showEditProfile, setShowEditProfile] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);
   const [showChangeEmail, setShowChangeEmail] = React.useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = React.useState(false);
   const [showThemePicker, setShowThemePicker] = React.useState(false);
+  const [showHelpCenter, setShowHelpCenter] = React.useState(false);
+  const [showTerms, setShowTerms] = React.useState(false);
+  const [showPrivacy, setShowPrivacy] = React.useState(false);
   const { isDark } = useTheme();
 
-  const {
-    currency,
-    themeMode,
-    billingAlertEnabled,
-    billingAlertDays,
-    renewalReminderEnabled,
-    renewalReminderDays,
-    customCategories,
-    setCurrency,
-    setThemeMode,
-    setBillingAlertEnabled,
-    setRenewalReminderEnabled,
-  } = useSettingsStore();
+  const { data: settings } = useUserSettings();
+  const { mutate: updateSettings } = useUpdateUserSettings();
+
+  const themeMode = useSettingsStore((s) => s.themeMode);
+  const billingAlertEnabled = useSettingsStore((s) => s.billingAlertEnabled);
+  const billingAlertDays = useSettingsStore((s) => s.billingAlertDays);
+  const renewalReminderEnabled = useSettingsStore((s) => s.renewalReminderEnabled);
+  const renewalReminderDays = useSettingsStore((s) => s.renewalReminderDays);
+  const setThemeMode = useSettingsStore((s) => s.setThemeMode);
+  const setBillingAlertEnabled = useSettingsStore((s) => s.setBillingAlertEnabled);
+  const setRenewalReminderEnabled = useSettingsStore((s) => s.setRenewalReminderEnabled);
+
+  const currency = settings?.currency ?? "USD";
 
   const currencyObj = CURRENCIES.find((c) => c.code === currency);
   const currencyLabel = currencyObj ? `${currencyObj.symbol} ${currencyObj.code}` : currency;
@@ -127,15 +143,23 @@ const Settings = () => {
     : images.avatar;
 
   const handleSignOut = async () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const confirmSignOut = async () => {
+    setShowSignOutConfirm(false);
     setIsSigningOut(true);
     try {
       await signOut();
+    } catch (err) {
+      console.error("[signOut] error:", err);
     } finally {
       setIsSigningOut(false);
     }
   };
 
   return (
+    <ErrorBoundary>
     <SafeAreaView className="flex-1 bg-background pb-5">
       <ScrollView
         className="flex-1"
@@ -147,7 +171,10 @@ const Settings = () => {
         </Text>
 
         {/* ── Profile Card ── */}
-        <Pressable className="mb-8 flex-row items-center gap-4 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a] px-5 py-5">
+        <Pressable
+          className="mb-8 flex-row items-center gap-4 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card px-5 py-5"
+          style={shadowCard}
+        >
           <Image source={avatarSource} className="size-14 rounded-full" />
           <View className="min-w-0 flex-1">
             <Text
@@ -165,7 +192,10 @@ const Settings = () => {
               </Text>
             ) : null}
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#ccc" />
+          <Image
+            source={isDark ? images.appIconDark : images.appIcon}
+            className="size-10 rounded-xl"
+          />
         </Pressable>
 
         {/* ── Account ── */}
@@ -173,7 +203,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Account
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="person-outline"
               iconColor="#2f6fed"
@@ -181,6 +211,7 @@ const Settings = () => {
               label="Edit profile"
               description="Name, avatar, bio"
               isFirst
+              isDark={isDark}
               onPress={() => setShowEditProfile(true)}
             />
             <Row
@@ -189,6 +220,7 @@ const Settings = () => {
               iconBg="#e6f5f0"
               label="Change password"
               description="Update your password"
+              isDark={isDark}
               onPress={() => setShowChangePassword(true)}
             />
             <Row
@@ -198,6 +230,7 @@ const Settings = () => {
               label="Email address"
               description={email || "Not set"}
               isLast
+              isDark={isDark}
               onPress={() => setShowChangeEmail(true)}
             />
           </View>
@@ -208,7 +241,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Subscriptions
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="card-outline"
               iconColor="#e03e3e"
@@ -218,12 +251,13 @@ const Settings = () => {
               rightElement={
                 <Switch
                   value={billingAlertEnabled}
-                  onValueChange={setBillingAlertEnabled}
+                  onValueChange={(value) => setBillingAlertEnabled(value)}
                   trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#e03e3e" }}
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
               }
               isFirst
+              isDark={isDark}
             />
             <Row
               icon="notifications-outline"
@@ -234,11 +268,12 @@ const Settings = () => {
               rightElement={
                 <Switch
                   value={renewalReminderEnabled}
-                  onValueChange={setRenewalReminderEnabled}
+                  onValueChange={(value) => setRenewalReminderEnabled(value)}
                   trackColor={{ false: isDark ? "#3a3a3a" : "#e5e5e5", true: "#ea7a53" }}
                   thumbColor={isDark ? "#ededed" : "#fff"}
                 />
               }
+              isDark={isDark}
             />
             <Row
               icon="globe-outline"
@@ -253,15 +288,9 @@ const Settings = () => {
                   <Ionicons name="chevron-forward" size={16} color="#ccc" />
                 </View>
               }
-              onPress={() => setShowCurrencyPicker(true)}
-            />
-            <Row
-              icon="pricetag-outline"
-              iconColor="#7c3aed"
-              iconBg="#f3eefb"
-              label="Categories"
-              description={`${customCategories.length} custom ${customCategories.length === 1 ? "category" : "categories"}`}
               isLast
+              isDark={isDark}
+              onPress={() => setShowCurrencyPicker(true)}
             />
           </View>
         </View>
@@ -271,12 +300,12 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Appearance
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
-              icon="moon-outline"
-              iconColor="#191919"
-              iconBg="#efefed"
-              label="Dark mode"
+              icon="color-palette-outline"
+              iconColor="#8b5cf6"
+              iconBg="#f3e8ff"
+              label="Theme"
               rightElement={
                 <View className="flex-row items-center gap-1.5">
                   <Text className="text-[13px] font-sans-medium text-muted-foreground">
@@ -287,6 +316,7 @@ const Settings = () => {
               }
               isFirst
               isLast
+              isDark={isDark}
               onPress={() => setShowThemePicker(true)}
             />
           </View>
@@ -297,7 +327,7 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Support
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="help-circle-outline"
               iconColor="#2f6fed"
@@ -305,6 +335,8 @@ const Settings = () => {
               label="Help center"
               description="FAQs and guides"
               isFirst
+              isDark={isDark}
+              onPress={() => setShowHelpCenter(true)}
             />
             <Row
               icon="chatbubble-outline"
@@ -312,6 +344,8 @@ const Settings = () => {
               iconBg="#e6f5f0"
               label="Contact us"
               description="Send us a message"
+              isDark={isDark}
+              onPress={() => Linking.openURL("mailto:mubashshirk786@gmail.com")}
             />
             <Row
               icon="bug-outline"
@@ -319,6 +353,8 @@ const Settings = () => {
               iconBg="#fdecea"
               label="Report a bug"
               isLast
+              isDark={isDark}
+              onPress={() => Linking.openURL("mailto:mubashshirk786@gmail.com?subject=Bug%20Report")}
             />
           </View>
         </View>
@@ -328,13 +364,15 @@ const Settings = () => {
           <Text className="mb-2 px-1 text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground">
             Legal
           </Text>
-          <View className="rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a]">
+          <View className="rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card" style={shadowCard}>
             <Row
               icon="document-text-outline"
               iconColor="#9a6700"
               iconBg="#fef3cd"
               label="Terms of Service"
               isFirst
+              isDark={isDark}
+              onPress={() => setShowTerms(true)}
             />
             <Row
               icon="shield-outline"
@@ -342,17 +380,27 @@ const Settings = () => {
               iconBg="#eef3fd"
               label="Privacy Policy"
               isLast
+              isDark={isDark}
+              onPress={() => setShowPrivacy(true)}
             />
           </View>
         </View>
 
         {/* ── Sign Out ── */}
         <Pressable
-          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl border border-border bg-white shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a] px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
+          className={`mb-6 flex-row items-center gap-3.5 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card px-4 py-3.5 ${isSigningOut ? "opacity-50" : ""}`}
+          style={shadowCard}
           onPress={handleSignOut}
           disabled={isSigningOut}
         >
-          <View className="size-8 items-center justify-center rounded-full bg-[#fdecea]">
+          <View
+            className="size-8 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: isDark ? "#e03e3e14" : "#fdecea",
+              borderWidth: isDark ? 1 : 0,
+              borderColor: isDark ? "#e03e3e40" : "transparent",
+            }}
+          >
             <Ionicons name="log-out-outline" size={16} color="#e03e3e" />
           </View>
           <Text className="text-[15px] font-sans-medium text-destructive">
@@ -383,15 +431,41 @@ const Settings = () => {
         visible={showCurrencyPicker}
         onClose={() => setShowCurrencyPicker(false)}
         selected={currency}
-        onSelect={setCurrency}
+        onSelect={(code) => updateSettings({ currency: code })}
       />
       <ThemePickerSheet
         visible={showThemePicker}
         onClose={() => setShowThemePicker(false)}
         selected={themeMode}
-        onSelect={setThemeMode}
+        onSelect={(mode) => setThemeMode(mode)}
+      />
+      <ProfessionalInfoSheet
+        visible={showHelpCenter}
+        onClose={() => setShowHelpCenter(false)}
+        type="help"
+      />
+      <ProfessionalInfoSheet
+        visible={showTerms}
+        onClose={() => setShowTerms(false)}
+        type="terms"
+      />
+      <ProfessionalInfoSheet
+        visible={showPrivacy}
+        onClose={() => setShowPrivacy(false)}
+        type="privacy"
+      />
+
+      <ConfirmDialog
+        visible={showSignOutConfirm}
+        onClose={() => setShowSignOutConfirm(false)}
+        onConfirm={confirmSignOut}
+        title="Sign Out"
+        message="Are you sure you want to sign out? You will need to sign in again to access your account."
+        confirmLabel="Sign Out"
+        loading={isSigningOut}
       />
     </SafeAreaView>
+    </ErrorBoundary>
   );
 };
 

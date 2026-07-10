@@ -5,6 +5,9 @@ import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/lib/useThemeSync";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { NetworkProvider } from "@/components/OfflineBanner";
+import { useNotificationSync } from "@/lib/hooks/useNotificationSync";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -15,6 +18,11 @@ if (!publishableKey) {
 }
 
 SplashScreen.preventAutoHideAsync();
+
+function NotificationWatcher() {
+  useNotificationSync();
+  return null;
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -36,9 +44,14 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-      </ThemeProvider>
+      <NetworkProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <NotificationWatcher />
+            <Stack screenOptions={{ headerShown: false }} />
+          </ThemeProvider>
+        </QueryProvider>
+      </NetworkProvider>
     </ClerkProvider>
   );
 }

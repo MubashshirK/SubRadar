@@ -1,12 +1,19 @@
 import { convertSync, getExchangeRates } from "@/lib/currency";
+import EmptyState from "@/components/EmptyState";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { shadowCard } from "@/constants/shadows";
+import InsightsSkeleton from "@/components/loading/InsightsSkeleton";
+import { Skeleton, SkeletonCircle, SkeletonText } from "@/components/loading/Skeleton";
+import { getCategoryColor } from "@/constants/categories";
 import { getLogoUrl } from "@/lib/logo";
-import { useSettingsStore } from "@/lib/settingsStore";
-import { useSubscriptionStore } from "@/lib/subscriptionStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
+import { useSubscriptions } from "@/lib/hooks/useSubscriptions";
 import { formatCurrency } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { Image } from "expo-image";
 import { styled } from "nativewind";
+import { useTheme } from "@/lib/useThemeSync";
 import React, {
   useCallback,
   useEffect,
@@ -17,30 +24,18 @@ import React, {
 import {
   LayoutChangeEvent,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 type Period = "monthly" | "yearly";
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Design: "#2f6fed",
-  "AI Tools": "#0f7b6c",
-  "Developer Tools": "#8b5cf6",
-};
-
-const FALLBACK_COLORS = ["#e03e3e", "#ea7a53", "#d97706", "#6366f1"];
-
-function getCategoryColor(category: string, index: number): string {
-  return (
-    CATEGORY_COLORS[category] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
-  );
-}
 
 function useAnimatedNumber(target: number, duration = 800) {
   const [displayed, setDisplayed] = useState(0);
@@ -65,10 +60,20 @@ function useAnimatedNumber(target: number, duration = 800) {
 }
 
 const Insights = () => {
-  const { subscriptions } = useSubscriptionStore();
-  const currency = useSettingsStore((s) => s.currency);
+  const { data: subscriptions = [], isPending, refetch } = useSubscriptions();
+  const { data: settings } = useUserSettings();
+  const currency = settings?.currency ?? "USD";
   const [period, setPeriod] = useState<Period>("monthly");
   const [rates, setRates] = useState<Record<string, number>>({});
+  const navigation = useNavigation();
+  const [refreshing, setRefreshing] = useState(false);
+  const { isDark } = useTheme();
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   const pillWidth = useSharedValue(0);
   const pillTranslateX = useSharedValue(0);
@@ -257,41 +262,49 @@ const Insights = () => {
     return `You're spreading your ${fmt(monthlyTotal)}/mo across ${categoryBreakdown.length} categories. The biggest is ${topCat.category}.`;
   }, [categoryBreakdown, topSubscriptions, monthlyTotal, fmt]);
 
+  if (isPending) {
+    return <InsightsSkeleton />;
+  }
+
   if (subscriptions.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-background p-5 pb-5">
-        <View className="flex-1 items-center justify-center">
-          <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
-          <Text className="mt-4 text-lg font-sans-semibold text-muted-foreground text-center">
-            No subscriptions to analyze.
-          </Text>
-          <Text className="mt-2 text-base font-sans-medium text-muted-foreground text-center">
-            Add subscriptions to see your spending insights.
-          </Text>
-        </View>
+        <Text className="mb-6 text-[28px] font-sans-bold text-primary">
+          Insights
+        </Text>
+        <EmptyState
+          icon="bar-chart-outline"
+          title="No subscriptions to analyze"
+          description="Add subscriptions to see your spending insights and trends."
+          ctaLabel="Add Subscription"
+          onCtaPress={() => navigation.navigate("subscriptions" as never)}
+        />
       </SafeAreaView>
     );
   }
 
   return (
+    <ErrorBoundary>
     <SafeAreaView className="flex-1 bg-background pb-5">
       <ScrollView
         contentContainerClassName="px-5 pt-5 pb-30"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="transparent"
+            colors={["transparent"]}
+          />
+        }
       >
         {/* Header */}
         <View className="mb-2 flex-row items-center justify-between">
-          <Text className="text-3xl font-sans-bold text-primary">Insights</Text>
+           <Text className="text-display">Insights</Text>
 
           <View
-            className="flex-row rounded-full bg-white dark:bg-[#1a1a1a] p-0.5"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.06,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="flex-row rounded-full bg-white dark:bg-card p-0.5"
+            style={shadowCard}
           >
             <Animated.View
               className="absolute rounded-full bg-primary inset-y-0.5"
@@ -337,6 +350,81 @@ const Insights = () => {
           </View>
         </View>
 
+        {refreshing ? (
+          <View className="mt-6 px-0">
+            {/* Hero skeleton */}
+            <View className="items-center pb-8">
+              <SkeletonText width={120} height={14} />
+              <SkeletonText width={180} height={42} className="mt-3" />
+              <View className="mt-3 flex-row items-center gap-2">
+                <SkeletonText width={50} height={14} />
+                <SkeletonText width={10} height={14} />
+                <SkeletonText width={60} height={14} />
+              </View>
+            </View>
+            {/* Stats skeleton */}
+            <View className="mb-8 flex-row gap-3">
+              {[1, 2, 3].map((i) => (
+                <View key={i} className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4">
+                  <SkeletonText width={50} height={12} />
+                  <SkeletonText width={60} height={20} className="mt-2" />
+                </View>
+              ))}
+            </View>
+            {/* Category skeleton */}
+            <SkeletonText width={130} height={12} className="mb-4" />
+            <View className="mb-8 gap-4">
+              {[1, 2, 3].map((i) => (
+                <View key={i} className="gap-2">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <SkeletonCircle size={10} />
+                      <SkeletonText width={90} height={16} />
+                    </View>
+                    <View className="flex-row items-center gap-3">
+                      <SkeletonText width={30} height={14} />
+                      <SkeletonText width={60} height={16} />
+                    </View>
+                  </View>
+                  <Skeleton height={8} borderRadius={4} />
+                </View>
+              ))}
+            </View>
+            {/* Top subs skeleton */}
+            <SkeletonText width={120} height={12} className="mb-4" />
+            <View className="mb-8 gap-4">
+              {[1, 2, 3].map((i) => (
+                <View key={i} className="gap-2">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-3">
+                      <SkeletonText width={20} height={16} />
+                      <SkeletonCircle size={32} borderRadius={8} />
+                      <SkeletonText width={80} height={16} />
+                    </View>
+                    <SkeletonText width={70} height={16} />
+                  </View>
+                  <Skeleton height={6} borderRadius={3} />
+                </View>
+              ))}
+            </View>
+            {/* Billing skeleton */}
+            <SkeletonText width={110} height={12} className="mb-4" />
+            <View className="mb-8 flex-row gap-3">
+              {[1, 2].map((i) => (
+                <View key={i} className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4">
+                  <View className="mb-3 flex-row items-center gap-2">
+                    <SkeletonCircle size={16} />
+                    <SkeletonText width={50} height={12} />
+                  </View>
+                  <SkeletonText width={40} height={24} />
+                  <SkeletonText width={70} height={12} className="mt-1" />
+                  <SkeletonText width={80} height={18} className="mt-3" />
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : (
+          <>
         {/* Hero Metric */}
         <View className="mt-6 items-center pb-8">
           <Text className="text-base font-sans-medium text-muted-foreground">
@@ -365,14 +453,8 @@ const Insights = () => {
         {/* Stats Row */}
         <View className="mb-8 flex-row gap-3">
           <View
-            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
+            style={shadowCard}
           >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Yearly
@@ -386,14 +468,8 @@ const Insights = () => {
             </Text>
           </View>
           <View
-            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
+            style={shadowCard}
           >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Active
@@ -403,14 +479,8 @@ const Insights = () => {
             </Text>
           </View>
           <View
-            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="flex-1 items-center rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
+            style={shadowCard}
           >
             <Text className="text-xs font-sans-medium text-muted-foreground">
               Top Category
@@ -425,7 +495,7 @@ const Insights = () => {
         </View>
 
         {/* Category Breakdown */}
-        <Text className="mb-4 text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground">
+        <Text className="mb-4 text-overline">
           Spending by Category
         </Text>
         <View className="mb-8 gap-4">
@@ -468,7 +538,7 @@ const Insights = () => {
         </View>
 
         {/* Top Subscriptions */}
-        <Text className="mb-4 text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground">
+        <Text className="mb-4 text-overline">
           Top Subscriptions
         </Text>
         <View className="mb-8 gap-4">
@@ -484,7 +554,7 @@ const Insights = () => {
                     </Text>
                     {sub.domain ? (
                       <Image
-                        source={getLogoUrl(sub.domain, 128)}
+                        source={getLogoUrl(sub.domain, 128, isDark ? "dark" : "auto")}
                         style={{ width: 32, height: 32, borderRadius: 8 }}
                         contentFit="cover"
                       />
@@ -518,19 +588,13 @@ const Insights = () => {
         </View>
 
         {/* Billing Breakdown */}
-        <Text className="mb-4 text-xs font-sans-semibold uppercase tracking-wider text-muted-foreground">
+        <Text className="mb-4 text-overline">
           Billing Overview
         </Text>
         <View className="mb-8 flex-row gap-3">
           <View
-            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
+            style={shadowCard}
           >
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="repeat-outline" size={16} color="#2f6fed" />
@@ -552,14 +616,8 @@ const Insights = () => {
             </Text>
           </View>
           <View
-            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="flex-1 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-4"
+            style={shadowCard}
           >
             <View className="mb-3 flex-row items-center gap-2">
               <Ionicons name="calendar-outline" size={16} color="#0f7b6c" />
@@ -588,14 +646,8 @@ const Insights = () => {
         {/* Smart Insight */}
         {smartInsight && (
           <View
-            className="mb-6 flex-row gap-3 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-5"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }}
+            className="mb-6 flex-row gap-3 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-5"
+            style={shadowCard}
           >
             <View className="mt-0.5 h-5 w-1 rounded-full bg-accent" />
             <View className="flex-1">
@@ -608,8 +660,11 @@ const Insights = () => {
             </View>
           </View>
         )}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 };
 

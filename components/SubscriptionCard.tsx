@@ -9,17 +9,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { clsx } from "clsx";
 import { Image } from "expo-image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import { getExchangeRates } from "@/lib/currency";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import { useTheme } from "@/lib/useThemeSync";
+import { shadowCard } from "@/constants/shadows";
 
 const DETAIL_ICONS = {
   payment: "card-outline" as const,
@@ -51,19 +51,20 @@ const SubscriptionCard = ({
   status,
   domain,
 }: SubscriptionCardProps) => {
-  const displayCurrency = useSettingsStore((s) => s.currency);
+  const { data: settings } = useUserSettings();
+  const displayCurrency = settings?.currency ?? "USD";
   const { isDark } = useTheme();
   const [rates, setRates] = useState<Record<string, number>>({});
   const cardColor = color ?? "#2f6fed";
   const smartStatus = getSmartStatusLabel(status, renewalDate);
   const monthsActive = getMonthsActive(startDate);
   const daysUntilRenewal = getDaysUntilRenewal(renewalDate);
-  const totalSpent = monthsActive > 0 ? monthlyEquiv * monthsActive : monthlyEquiv;
   const monthlyEquiv = billing === "Yearly" ? price / 12 : price;
+  const totalSpent = monthsActive > 0 ? monthlyEquiv * monthsActive : monthlyEquiv;
 
   const displayMeta = category?.trim() || plan?.trim() || "";
 
-  const imageSource = domain ? { uri: getLogoUrl(domain, 128) } : icon;
+  const imageSource = domain ? { uri: getLogoUrl(domain, 128, isDark ? "dark" : "auto") } : icon;
 
   useEffect(() => {
     getExchangeRates().then(setRates);
@@ -73,19 +74,42 @@ const SubscriptionCard = ({
     return convertAndFormat(value, subCurrency || currency || "USD", displayCurrency, rates);
   };
 
-  // Simple expand animation
+  const [measured, setMeasured] = useState(false);
   const expandAnim = useSharedValue(0);
+  const contentHeight = useSharedValue(0);
+  const maxHeightValue = useSharedValue(0);
+  const measuredRef = useRef(false);
+  const buttonPressRef = useRef(false);
+
+  const handleLayout = (e: { nativeEvent: { layout: { height: number } } }) => {
+    const height = e.nativeEvent.layout.height;
+    if (height > 0 && !measuredRef.current) {
+      measuredRef.current = true;
+      contentHeight.value = height;
+      maxHeightValue.value = expanded ? height : 0;
+      expandAnim.value = expanded ? 1 : 0;
+      setMeasured(true);
+    }
+  };
 
   useEffect(() => {
-    expandAnim.value = withTiming(expanded ? 1 : 0, {
-      duration: 200,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [expanded, expandAnim]);
+    const ANIM_CONFIG = { duration: 250, easing: Easing.out(Easing.cubic) };
+    if (expanded && measured) {
+      maxHeightValue.value = withTiming(contentHeight.value, ANIM_CONFIG);
+      expandAnim.value = withTiming(1, ANIM_CONFIG);
+    } else if (!expanded) {
+      maxHeightValue.value = withTiming(0, ANIM_CONFIG);
+      expandAnim.value = withTiming(0, ANIM_CONFIG);
+    }
+  }, [expanded, measured, contentHeight, expandAnim, maxHeightValue]);
 
-  const detailsStyle = useAnimatedStyle(() => ({
-    opacity: expandAnim.value,
-  }));
+  const handleCardPress = () => {
+    if (buttonPressRef.current) {
+      buttonPressRef.current = false;
+      return;
+    }
+    onPress();
+  };
 
   // Status pill
   const statusPillClass = clsx(
@@ -112,15 +136,9 @@ const SubscriptionCard = ({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handleCardPress}
       className="sub-card"
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-      }}
+      style={shadowCard}
     >
       {/* Collapsed Row */}
       <View className="sub-card-inner">
@@ -176,9 +194,15 @@ const SubscriptionCard = ({
       </View>
 
       {/* Expanded Details */}
-      {expanded && (
-        <Animated.View
-          style={detailsStyle}
+      <Animated.View
+        style={{
+          opacity: expandAnim,
+          maxHeight: measured ? (maxHeightValue as any) : undefined,
+          overflow: "hidden",
+        }}
+      >
+        <View
+          onLayout={handleLayout}
           className="border-t border-border/40 px-4 pb-4 pt-3"
         >
           <View className="gap-4">
@@ -319,8 +343,8 @@ const SubscriptionCard = ({
             <View className="sub-actions">
               {onEditPress && (
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
+                  onPress={() => {
+                    buttonPressRef.current = true;
                     onEditPress();
                   }}
                   className="sub-action-edit"
@@ -331,8 +355,8 @@ const SubscriptionCard = ({
               )}
               {onCancelPress && (
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
+                  onPress={() => {
+                    buttonPressRef.current = true;
                     onCancelPress();
                   }}
                   className="sub-action-delete"
@@ -343,8 +367,8 @@ const SubscriptionCard = ({
               )}
             </View>
           </View>
-        </Animated.View>
-      )}
+        </View>
+      </Animated.View>
     </Pressable>
   );
 };

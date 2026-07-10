@@ -1,41 +1,41 @@
 {
   "expo": {
     "name": "SubRadar",
-    "slug": "SubRadar",
+    "slug": "subradar",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/app-icon.png",
     "scheme": "subradar",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.mubashshir.subradar",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mubashshir.subradar",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/app-icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/app-icon.png",
+          "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#0f0f12",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#0f0f12"
           }
         }
       ],
@@ -43,21 +43,29 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/PlusJakartaSans-Regular.tff",
-            "./assets/fonts/PlusJakartaSans-Bold.tff",
-            "./assets/fonts/PlusJakartaSans-Medium.tff",
-            "./assets/fonts/PlusJakartaSans-SemiBold.tff",
-            "./assets/fonts/PlusJakartaSans-ExtraBold.tff",
-            "./assets/fonts/PlusJakartaSans-Light.tff"
+            "./assets/fonts/PlusJakartaSans-Regular.ttf",
+            "./assets/fonts/PlusJakartaSans-Bold.ttf",
+            "./assets/fonts/PlusJakartaSans-Medium.ttf",
+            "./assets/fonts/PlusJakartaSans-SemiBold.ttf",
+            "./assets/fonts/PlusJakartaSans-ExtraBold.ttf",
+            "./assets/fonts/PlusJakartaSans-Light.ttf"
           ]
         }
       ],
       "@clerk/expo",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "98f66938-6223-46c3-8a43-d1c66319ec25"
+      }
+    },
+    "owner": "mubashshirkhan"
   }
 }

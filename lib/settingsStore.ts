@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { secureStorage } from "./storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const CURRENCIES = [
   { code: "USD", symbol: "$", label: "US Dollar", flag: "🇺🇸", region: "Americas" as const },
@@ -46,7 +46,7 @@ export type ServiceCategory = typeof DEFAULT_CATEGORIES[number];
 
 export type ThemeMode = "system" | "light" | "dark";
 
-interface SettingsState {
+export interface SettingsState {
   currency: CurrencyCode;
   themeMode: ThemeMode;
   billingAlertEnabled: boolean;
@@ -65,6 +65,8 @@ interface SettingsState {
   addCategory: (category: string) => void;
   removeCategory: (category: string) => void;
   setOnboarded: () => void;
+  importSettings: (settings: Partial<SettingsState>) => void;
+  resetSettings: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -97,10 +99,28 @@ export const useSettingsStore = create<SettingsState>()(
           customCategories: state.customCategories.filter((c) => c !== category),
         })),
       setOnboarded: () => set({ hasOnboarded: true }),
+
+      importSettings: (settings) =>
+        set((state) => ({
+          ...state,
+          ...settings,
+        })),
+
+      resetSettings: () =>
+        set({
+          currency: "USD",
+          themeMode: "system",
+          billingAlertEnabled: false,
+          billingAlertDays: 3,
+          renewalReminderEnabled: false,
+          renewalReminderDays: 1,
+          customCategories: [],
+          hasOnboarded: false,
+        }),
     }),
     {
       name: "subradar-settings",
-      storage: createJSONStorage(() => secureStorage),
+      storage: createJSONStorage(() => AsyncStorage),
     },
   ),
 );

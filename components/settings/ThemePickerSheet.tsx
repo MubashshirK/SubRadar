@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemeMode } from "@/lib/settingsStore";
+import { shadowDialog } from "@/constants/shadows";
 
 type ThemePickerSheetProps = {
   visible: boolean;
@@ -35,14 +36,8 @@ export default function ThemePickerSheet({
         onPress={onClose}
       >
         <Pressable
-          className="w-[300px] rounded-2xl bg-white dark:bg-[#1a1a1a] p-5"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 24,
-            elevation: 12,
-          }}
+          className="w-[300px] rounded-2xl bg-white dark:bg-[#252528] p-5 dark:border dark:border-white/10"
+          style={shadowDialog}
           onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}

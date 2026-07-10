@@ -212,9 +212,9 @@ export default function ChangeEmailSheet({ visible, onClose }: Props) {
                       : code.length === i && code.length < CODE_LENGTH
                         ? "border-primary/40 border-input"
                         : "border-input"
-                  } bg-background dark:bg-[#1a1a1a]`}
+                   } bg-background dark:bg-card`}
                 >
-                  <Text className="text-xl font-sans-bold text-primary">
+                   <Text className="text-sheet-title">
                     {code[i] || ""}
                   </Text>
                 </View>

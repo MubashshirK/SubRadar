@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Pressable, View, Text, LayoutChangeEvent } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { shadowTabBar } from "@/constants/shadows";
+import { useTheme } from "@/lib/useThemeSync";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   type SharedValue,
 } from "react-native-reanimated";
-import { useTheme } from "@/lib/useThemeSync";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ICON_SIZE = 22;
-const LABEL_SIZE = 13;
 const PILL_PAD_X = 20;
 const PILL_PAD_TOP = 4;
 const PILL_PAD_BOT = 4;
@@ -20,7 +20,7 @@ const BAR_RADIUS = 22;
 const PILL_RADIUS = 18;
 const BAR_MARGIN_H = 20;
 const BAR_BOTTOM = 16;
-const SPRING = { damping: 22, stiffness: 280, mass: 0.9 };
+const SPRING = { damping: 26, stiffness: 240, mass: 0.9 };
 const HOME_OFFSET = -6;
 
 const FLEX_ACTIVE = 1.8;
@@ -46,7 +46,7 @@ type TabItem = {
   icon: string;
 };
 
-function TabButton({
+const TabButton = React.memo(function TabButton({
   tab,
   tabIndex,
   isActive,
@@ -61,18 +61,32 @@ function TabButton({
   isActive: boolean;
   isHomeActive: boolean;
   flexVal: SharedValue<number>;
-  onPress: () => void;
+  onPress: (name: string) => void;
   onContentLayout: (name: string, e: LayoutChangeEvent) => void;
-  onTabLayout: (e: LayoutChangeEvent) => void;
+  onTabLayout: (index: number, e: LayoutChangeEvent) => void;
 }) {
   const { isDark } = useTheme();
   const animStyle = useAnimatedStyle(() => ({
     flex: flexVal.value,
   }));
 
+  const handlePress = useCallback(() => {
+    onPress(tab.name);
+  }, [onPress, tab.name]);
+
+  const handleContentLayoutCb = useCallback(
+    (e: LayoutChangeEvent) => onContentLayout(tab.name, e),
+    [onContentLayout, tab.name],
+  );
+
+  const handleTabLayoutCb = useCallback(
+    (e: LayoutChangeEvent) => onTabLayout(tabIndex, e),
+    [onTabLayout, tabIndex],
+  );
+
   return (
     <Animated.View
-      onLayout={onTabLayout}
+      onLayout={handleTabLayoutCb}
       style={[
         {
           height: BAR_HEIGHT,
@@ -83,7 +97,7 @@ function TabButton({
       ]}
     >
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         style={({ pressed }) => ({
           alignItems: "center",
@@ -92,8 +106,15 @@ function TabButton({
         })}
       >
         <View
-          onLayout={(e) => onContentLayout(tab.name, e)}
-          style={{ flexDirection: "row", alignItems: "center", gap: 7, transform: [{ translateX: tabIndex <= 1 && isHomeActive ? HOME_OFFSET : 0 }] }}
+          onLayout={handleContentLayoutCb}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 7,
+            transform: [
+              { translateX: tabIndex <= 1 && isHomeActive ? HOME_OFFSET : 0 },
+            ],
+          }}
         >
           <Ionicons
             name={tab.icon as any}
@@ -102,12 +123,8 @@ function TabButton({
           />
           {isActive && (
             <Text
-              style={{
-                fontSize: LABEL_SIZE,
-                fontWeight: "600",
-                color: isDark ? "#fff" : "#191919",
-                letterSpacing: 0.2,
-              }}
+              className="text-[13px] font-sans-semibold"
+              style={{ color: isDark ? "#fff" : "#191919", letterSpacing: 0.2 }}
             >
               {tab.title}
             </Text>
@@ -116,7 +133,7 @@ function TabButton({
       </Pressable>
     </Animated.View>
   );
-}
+});
 
 export default function CustomTabBar({
   state,
@@ -139,11 +156,26 @@ export default function CustomTabBar({
   const activeName = state.routes[state.index].name;
   const activeIndex = state.index;
 
+  const activeIndexRef = useRef(activeIndex);
+  const activeNameRef = useRef(activeName);
+  const navigateRef = useRef(navigation);
+  activeIndexRef.current = activeIndex;
+  activeNameRef.current = activeName;
+  navigateRef.current = navigation;
+
+  const handleTabPress = useCallback(
+    (name: string) => navigateRef.current.navigate(name),
+    [],
+  );
+
   const flex0 = useSharedValue(1);
   const flex1 = useSharedValue(1);
   const flex2 = useSharedValue(1);
   const flex3 = useSharedValue(1);
-  const flexVals = useMemo(() => [flex0, flex1, flex2, flex3], [flex0, flex1, flex2, flex3]);
+  const flexVals = useMemo(
+    () => [flex0, flex1, flex2, flex3],
+    [flex0, flex1, flex2, flex3],
+  );
 
   const tabs = useMemo(
     () =>
@@ -178,11 +210,6 @@ export default function CustomTabBar({
     );
   }, [activeIndex, flex0, flex1, flex2, flex3]);
 
-  const pillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-    width: pillW.value,
-  }));
-
   const updatePill = useCallback(
     (name: string, idx: number) => {
       const m = measuresRef.current[name];
@@ -191,7 +218,10 @@ export default function CustomTabBar({
         const pw = m.w + PILL_PAD_X * 2;
         const offset = idx === 0 ? HOME_OFFSET : 0;
         pillW.value = withSpring(pw, SPRING);
-        translateX.value = withSpring(tabPos.x + (tabPos.w - pw) / 2 + offset, SPRING);
+        translateX.value = withSpring(
+          tabPos.x + (tabPos.w - pw) / 2 + offset,
+          SPRING,
+        );
       }
     },
     [translateX, pillW],
@@ -205,41 +235,49 @@ export default function CustomTabBar({
     (e: LayoutChangeEvent) => {
       const w = e.nativeEvent.layout.width;
       barWidthRef.current = w;
-      const m = measuresRef.current[activeName];
-      const tabPos = tabPositions.current[activeIndex];
+      const idx = activeIndexRef.current;
+      const name = activeNameRef.current;
+      const m = measuresRef.current[name];
+      const tabPos = tabPositions.current[idx];
       if (m && tabPos && tabPos.w > 0) {
         const pw = m.w + PILL_PAD_X * 2;
-        const offset = activeIndex === 0 ? HOME_OFFSET : 0;
+        const offset = idx === 0 ? HOME_OFFSET : 0;
         pillW.value = pw;
         translateX.value = tabPos.x + (tabPos.w - pw) / 2 + offset;
       }
     },
-    [activeName, activeIndex, translateX, pillW],
+    [translateX, pillW],
   );
 
   const handleContentLayout = useCallback(
     (name: string, e: LayoutChangeEvent) => {
       const { width } = e.nativeEvent.layout;
       measuresRef.current[name] = { x: 0, w: width };
-      if (barWidthRef.current > 0 && name === activeName) {
-        const tabPos = tabPositions.current[activeIndex];
+      const idx = activeIndexRef.current;
+      const active = activeNameRef.current;
+      if (barWidthRef.current > 0 && name === active) {
+        const tabPos = tabPositions.current[idx];
         if (tabPos && tabPos.w > 0) {
           const pw = width + PILL_PAD_X * 2;
-          const offset = activeIndex === 0 ? HOME_OFFSET : 0;
+          const offset = idx === 0 ? HOME_OFFSET : 0;
           pillW.value = withSpring(pw, SPRING);
-          translateX.value = withSpring(tabPos.x + (tabPos.w - pw) / 2 + offset, SPRING);
+          translateX.value = withSpring(
+            tabPos.x + (tabPos.w - pw) / 2 + offset,
+            SPRING,
+          );
         }
       }
     },
-    [activeName, activeIndex, translateX, pillW],
+    [translateX, pillW],
   );
 
   const handleTabLayout = useCallback(
     (i: number, e: LayoutChangeEvent) => {
       const { x, width } = e.nativeEvent.layout;
       tabPositions.current[i] = { x, w: width };
-      if (i === activeIndex) {
-        const m = measuresRef.current[activeName];
+      const idx = activeIndexRef.current;
+      if (i === idx) {
+        const m = measuresRef.current[activeNameRef.current];
         if (m) {
           const pw = m.w + PILL_PAD_X * 2;
           const offset = i === 0 ? HOME_OFFSET : 0;
@@ -248,12 +286,12 @@ export default function CustomTabBar({
         }
       }
     },
-    [activeIndex, activeName, translateX, pillW],
+    [translateX, pillW],
   );
 
   return (
     <View
-      className={isDark ? "bg-[#1a1a1a]" : "bg-white"}
+      className={isDark ? "bg-card" : "bg-white"}
       style={{
         position: "absolute",
         bottom: Math.max(insets.bottom, BAR_BOTTOM),
@@ -262,11 +300,7 @@ export default function CustomTabBar({
         height: BAR_HEIGHT,
         borderRadius: BAR_RADIUS,
         padding: 3,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.08,
-        shadowRadius: 20,
-        elevation: 10,
+        ...shadowTabBar,
       }}
     >
       <View
@@ -280,36 +314,35 @@ export default function CustomTabBar({
           overflow: "hidden",
         }}
       >
-      <Animated.View
-        style={[
-          pillStyle,
-          {
+        <Animated.View
+          style={{
             position: "absolute",
             left: 0,
             top: PILL_PAD_TOP,
             bottom: PILL_PAD_BOT,
             borderRadius: PILL_RADIUS,
             backgroundColor: isDark ? "#191919" : "#fff",
-          },
-        ]}
-      />
+            width: pillW,
+            transform: [{ translateX: translateX }],
+          }}
+        />
 
-      {tabs.map((tab, i) => {
-        const isActive = tab.name === activeName;
-        return (
-          <TabButton
-            key={tab.name}
-            tab={tab}
-            tabIndex={i}
-            isActive={isActive}
-            isHomeActive={activeIndex === 0}
-            flexVal={flexVals[i]}
-            onPress={() => navigation.navigate(tab.name)}
-            onContentLayout={handleContentLayout}
-            onTabLayout={(e) => handleTabLayout(i, e)}
-          />
-        );
-      })}
+        {tabs.map((tab, i) => {
+          const isActive = tab.name === activeName;
+          return (
+            <TabButton
+              key={tab.name}
+              tab={tab}
+              tabIndex={i}
+              isActive={isActive}
+              isHomeActive={activeIndex === 0}
+              flexVal={flexVals[i]}
+              onPress={handleTabPress}
+              onContentLayout={handleContentLayout}
+              onTabLayout={handleTabLayout}
+            />
+          );
+        })}
       </View>
     </View>
   );

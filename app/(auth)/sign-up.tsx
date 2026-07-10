@@ -1,6 +1,7 @@
-import { useSignUp } from "@clerk/expo";
+import { useAuth, useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { Image } from "expo-image";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -11,12 +12,16 @@ import {
   TextInput,
   View,
 } from "react-native";
+import appIconLight from "@/assets/app-icon.png";
+import appIconDark from "@/assets/app-icon-dark.png";
 import { useTheme } from "@/lib/useThemeSync";
+import { SocialSignInButtons } from "@/components/SocialSignInButtons";
 
 const CODE_LENGTH = 6;
 
 export default function SignUpScreen() {
   const { signUp, errors, fetchStatus } = useSignUp();
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const { isDark } = useTheme();
   const codeInputRef = React.useRef<TextInput>(null);
@@ -29,6 +34,7 @@ export default function SignUpScreen() {
     email?: string;
     password?: string;
   }>({});
+  const [apiError, setApiError] = React.useState("");
 
   const validate = (): boolean => {
     const next: { email?: string; password?: string } = {};
@@ -47,13 +53,19 @@ export default function SignUpScreen() {
   const handleSubmit = async () => {
     if (!validate()) return;
 
+    setApiError("");
+
     const { error } = await signUp.password({
       emailAddress: emailAddress.trim(),
       password,
     });
 
     if (error) {
-      console.error(JSON.stringify(error, null, 2));
+      const msg = (error as any)?.errors?.[0]?.longMessage
+        || (error as any)?.errors?.[0]?.message
+        || error.message
+        || "Something went wrong";
+      setApiError(msg);
       return;
     }
 
@@ -100,7 +112,7 @@ export default function SignUpScreen() {
   const canSubmit = emailAddress.trim() && password && !isFetching;
   const canVerify = code.trim() && !isFetching;
 
-  if (signUp.status === "complete") return null;
+  if (isSignedIn) return null;
 
   /* ─────────── Verification code view ─────────── */
   if (isVerifying) {
@@ -115,7 +127,7 @@ export default function SignUpScreen() {
             contentContainerClassName="grow items-center justify-center px-8"
             keyboardShouldPersistTaps="handled"
           >
-            <View className="w-full max-w-90">
+            <View className="w-full max-w-[360px]">
               <Text className="auth-title">Check your inbox</Text>
               <Text className="auth-subtitle mt-2">
                 We sent a verification code to{"\n"}
@@ -158,7 +170,7 @@ export default function SignUpScreen() {
               {errors.fields.code && (
                 <View className="mb-4 flex-row items-center gap-2">
                   <View className="size-1.5 rounded-full bg-destructive" />
-                  <Text className="auth-error flex-1">
+                  <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
                     {errors.fields.code.message}
                   </Text>
                 </View>
@@ -182,8 +194,8 @@ export default function SignUpScreen() {
             </View>
           </ScrollView>
 
-          <View className="items-center px-8 pb-8 pt-4">
-            <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <View className="items-center px-8 pb-12 pt-4">
+            <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
               By signing up, you agree to our{" "}
               <Text className="font-sans-semibold text-primary">
                 Terms of Service
@@ -211,7 +223,10 @@ export default function SignUpScreen() {
           contentContainerClassName="grow items-center justify-center px-8"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="w-full max-w-90">
+          <View className="w-full max-w-[360px]">
+            <View className="items-center mb-8">
+              <Image source={isDark ? appIconDark : appIconLight} contentFit="contain" style={{ width: 72, height: 72 }} />
+            </View>
             <Text className="auth-title">Sign up</Text>
             <Text className="auth-subtitle">
               Already have an account?{" "}
@@ -234,6 +249,7 @@ export default function SignUpScreen() {
                   setEmailAddress(v);
                   if (localErrors.email)
                     setLocalErrors((p) => ({ ...p, email: undefined }));
+                  if (apiError) setApiError("");
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -243,7 +259,7 @@ export default function SignUpScreen() {
             {(localErrors.email || errors.fields.emailAddress) && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
+                <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
                   {localErrors.email ?? errors.fields.emailAddress!.message}
                 </Text>
               </View>
@@ -263,6 +279,7 @@ export default function SignUpScreen() {
                   setPassword(v);
                   if (localErrors.password)
                     setLocalErrors((p) => ({ ...p, password: undefined }));
+                  if (apiError) setApiError("");
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -281,11 +298,18 @@ export default function SignUpScreen() {
             {(localErrors.password || errors.fields.password) && (
               <View className="mt-2 flex-row items-center gap-2">
                 <View className="size-1.5 rounded-full bg-destructive" />
-                <Text className="auth-error flex-1">
+                <Text className="flex-1 text-[12px] font-sans-medium text-destructive">
                   {localErrors.password ?? errors.fields.password!.message}
                 </Text>
               </View>
             )}
+
+            {apiError ? (
+              <View className="mt-4 flex-row items-center gap-2">
+                <View className="size-1.5 rounded-full bg-destructive" />
+                <Text className="flex-1 text-[12px] font-sans-medium text-destructive">{apiError}</Text>
+              </View>
+            ) : null}
 
             {/* Create account button */}
             <Pressable
@@ -297,11 +321,13 @@ export default function SignUpScreen() {
                 {isFetching ? "Creating account\u2026" : "Create account"}
               </Text>
             </Pressable>
+
+            <SocialSignInButtons />
           </View>
         </ScrollView>
 
         <View className="items-center px-8 pb-8 pt-4">
-          <Text className="text-center text-[11px] leading-5 font-sans-medium text-muted-foreground">
+          <Text className="text-center text-[10px] leading-5 font-sans-medium text-muted-foreground">
             By signing up, you agree to our{" "}
             <Text className="font-sans-semibold text-primary">
               Terms of Service

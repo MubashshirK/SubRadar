@@ -4,7 +4,9 @@ import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { getExchangeRates } from "@/lib/currency";
-import { useSettingsStore } from "@/lib/settingsStore";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
+import { shadowCard } from "@/constants/shadows";
+import { useTheme } from "@/lib/useThemeSync";
 
 const UpcomingSubscriptionCard = ({
   name,
@@ -15,8 +17,10 @@ const UpcomingSubscriptionCard = ({
   color,
   domain,
 }: UpcomingSubscription) => {
-  const displayCurrency = useSettingsStore((s) => s.currency);
+  const { data: settings } = useUserSettings();
+  const displayCurrency = settings?.currency ?? "USD";
   const [rates, setRates] = useState<Record<string, number>>({});
+  const { isDark } = useTheme();
 
   useEffect(() => {
     getExchangeRates().then(setRates);
@@ -30,22 +34,16 @@ const UpcomingSubscriptionCard = ({
     : price;
 
   return (
-    <View className="mr-3 w-44 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-3.5"
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-      }}
+    <View className="mr-3 w-44 rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card p-3.5"
+      style={shadowCard}
     >
       <View className="flex-row items-start justify-between">
         <View
-          className="size-10 items-center justify-center rounded-xl overflow-hidden bg-white"
+          className="size-10 items-center justify-center rounded-xl overflow-hidden bg-white dark:bg-transparent"
         >
           {domain ? (
             <Image
-              source={getLogoUrl(domain, 128)}
+              source={getLogoUrl(domain, 128, isDark ? "dark" : "auto")}
               style={{ width: "100%", height: "100%", borderRadius: 8 }}
               contentFit="cover"
             />
@@ -53,13 +51,13 @@ const UpcomingSubscriptionCard = ({
             <Image source={icon} style={{ width: "100%", height: "100%", borderRadius: 8 }} contentFit="cover" />
           )}
         </View>
-        <Text className="text-sm font-sans-bold text-primary">
+        <Text className="text-cta text-primary">
           {convertAndFormat(price, currency || "USD", displayCurrency, rates)}
         </Text>
       </View>
 
       <Text
-        className="mt-3 text-base font-sans-semibold text-primary"
+        className="mt-3 text-card-title"
         numberOfLines={1}
       >
         {name}

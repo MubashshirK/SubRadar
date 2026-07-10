@@ -7,16 +7,21 @@
 @theme {
   --color-background: #f8f8f8;
   --color-foreground: #191919;
-  --color-card: #f7f6f3;
-  --color-muted: #efefed;
-  --color-muted-foreground: rgba(55, 53, 47, 0.5);
+  --color-card: #ffffff;
+  --color-muted: #f0f0ef;
+  --color-muted-foreground: rgba(55, 53, 47, 0.55);
   --color-primary: #191919;
-  --color-accent: #2f6fed;
-  --color-border: rgba(55, 53, 47, 0.12);
-  --color-success: #0f7b6c;
+  --color-accent: #6366f1;
+  --color-accent-foreground: #ffffff;
+  --color-border: rgba(55, 53, 47, 0.1);
+  --color-success: #10b981;
   --color-destructive: #e03e3e;
-  --color-subscription: #e8f3ff;
-  --color-input: #e5e5e5;
+  --color-subscription: #eef2ff;
+  --color-input: #e8e8e6;
+  --color-ring: #6366f1;
+
+  /* Lighter accent variant for backgrounds */
+  --color-accent-light: rgba(99, 102, 241, 0.08);
 
   --font-sans: sans-regular;
   --font-sans-light: sans-light;
@@ -25,7 +30,6 @@
   --font-sans-bold: sans-bold;
   --font-sans-extrabold: sans-extrabold;
 
-  /* Spacing */
   --spacing-0: 0px;
   --spacing-1: 4px;
   --spacing-2: 8px;
@@ -46,25 +50,58 @@
   --spacing-24: 96px;
   --spacing-30: 120px;
 
-  /* Typography */
+  /* Shadow system - Light mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 20px rgba(47, 111, 237, 0.15);
 }
 
 /* ── Dark Mode Tokens ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #111111;
+    --color-background: #0f0f12;
     --color-foreground: #ededed;
-    --color-card: #1a1a1a;
-    --color-muted: #2a2a2a;
+    --color-card: #18181b;
+    --color-muted: #27272a;
     --color-muted-foreground: rgba(237, 237, 237, 0.5);
     --color-primary: #ededed;
-    --color-border: rgba(237, 237, 237, 0.12);
-    --color-subscription: #1a2a3a;
-    --color-input: #3a3a3a;
+    --color-accent: #818cf8;
+    --color-accent-foreground: #0f0f12;
+    --color-border: rgba(237, 237, 237, 0.08);
+    --color-success: #34d399;
+    --color-destructive: #e03e3e;
+    --color-subscription: #1e1b4b;
+    --color-input: #27272a;
+    --color-ring: #818cf8;
+    --color-accent-light: rgba(129, 140, 248, 0.12);
+
+    /* Dark mode shadows - more subtle, with blue tint */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.45), 0 8px 32px rgba(0, 0, 0, 0.35);
+    --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.3);
   }
 }
 
 @layer components {
+  /* Shadow utilities */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
   /* Home Header */
   .home-header {
     @apply mb-2.5 flex-row items-center justify-between;
@@ -80,14 +117,6 @@
 
   .home-user-name {
     @apply ml-4 text-2xl font-sans-bold text-primary;
-  }
-
-  .home-add-icon-wrapper {
-    @apply size-10 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center;
-  }
-
-  .home-add-icon {
-    @apply size-6;
   }
 
   /* Balance Card — dark gradient premium card */
@@ -130,7 +159,7 @@
 
   /* Section Lists */
   .list-head {
-    @apply my-5 flex-row items-center justify-between;
+    @apply my-4 flex-row items-center justify-between;
   }
 
   .list-title {
@@ -145,34 +174,9 @@
     @apply text-xs font-sans-semibold text-muted-foreground;
   }
 
-  /* Upcoming Cards */
-  .upcoming-card {
-    @apply mr-4 w-44 rounded-xl border border-border bg-card shadow-sm dark:border-[#3a3a3a] dark:bg-[#1a1a1a] p-4;
-  }
-
-  .upcoming-row {
-    @apply flex-row items-center gap-3;
-  }
-
-  .upcoming-icon {
-    @apply size-12;
-  }
-
-  .upcoming-price {
-    @apply text-lg font-sans-bold text-primary;
-  }
-
-  .upcoming-meta {
-    @apply text-sm font-sans-semibold text-muted-foreground;
-  }
-
-  .upcoming-name {
-    @apply mt-2 text-lg font-sans-bold text-primary;
-  }
-
   /* Subscription Cards — Clean Design */
   .sub-card {
-    @apply rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-[#1a1a1a];
+    @apply rounded-2xl border border-border bg-white dark:border-[#3a3a3a] dark:bg-card;
   }
 
   .sub-card-inner {
@@ -184,7 +188,7 @@
   }
 
   .sub-icon-bg {
-    @apply size-13 items-center justify-center overflow-hidden rounded-xl bg-white;
+    @apply size-13 items-center justify-center overflow-hidden rounded-xl bg-white dark:bg-transparent;
   }
 
   .sub-name {
@@ -301,12 +305,6 @@
   }
 
   /* ─── Auth Screens ─── */
-
-  .auth-screen {
-    @apply flex-1 bg-white dark:bg-background;
-  }
-
-  /* Title */
   .auth-title {
     @apply text-[28px] font-sans-bold leading-tight text-primary;
   }
@@ -365,7 +363,7 @@
   }
 
   .auth-code-box {
-    @apply size-12 items-center justify-center rounded-xl border-2 border-input bg-white dark:bg-[#1a1a1a];
+    @apply size-12 items-center justify-center rounded-xl border-2 border-input bg-white dark:bg-card;
   }
 
   .auth-code-box-filled {
@@ -380,60 +378,7 @@
     @apply text-xl font-sans-bold text-primary;
   }
 
-  /* Modal */
-  .modal-overlay {
-    @apply flex-1 bg-black/40;
-  }
-
-  .modal-container {
-    @apply mt-auto max-h-[85%] rounded-t-2xl bg-background;
-  }
-
-  .modal-header {
-    @apply flex-row items-center justify-between border-b border-border px-5 py-4;
-  }
-
-  .modal-title {
-    @apply text-xl font-sans-bold text-primary;
-  }
-
-  .modal-close {
-    @apply size-8 items-center justify-center rounded-full bg-muted;
-  }
-
-  .modal-close-text {
-    @apply text-lg font-sans-bold text-primary;
-  }
-
-  .modal-body {
-    @apply gap-5 p-5;
-  }
-
   /* Picker & Category Chips */
-  .picker-row {
-    @apply flex-row gap-3;
-  }
-
-  .picker-option {
-    @apply flex-1 items-center rounded-xl border border-border bg-background py-3;
-  }
-
-  .picker-option-active {
-    @apply border-accent/40 bg-accent/8;
-  }
-
-  .picker-option-text {
-    @apply text-sm font-sans-semibold text-muted-foreground;
-  }
-
-  .picker-option-text-active {
-    @apply text-accent;
-  }
-
-  .category-scroll {
-    @apply flex-row flex-wrap gap-2;
-  }
-
   .category-chip {
     @apply rounded-full border border-border bg-background px-4 py-2;
   }
@@ -448,5 +393,51 @@
 
   .category-chip-text-active {
     @apply text-accent;
+  }
+
+  /* ─── Typography Tokens ─── */
+  /* Display: page/screen titles */
+  .text-display {
+    @apply text-[28px] font-sans-bold leading-tight text-primary;
+  }
+
+  /* Heading: section headings ("Upcoming", "All Subscriptions") */
+  .text-heading {
+    @apply text-2xl font-sans-bold text-primary;
+  }
+
+  /* Subtitle: sheet/modal titles */
+  .text-sheet-title {
+    @apply text-[17px] font-sans-bold text-primary;
+  }
+
+  /* Card title: subscription names in cards */
+  .text-card-title {
+    @apply text-[16px] font-sans-semibold text-primary;
+  }
+
+  /* Primary CTA button text */
+  .text-cta {
+    @apply text-[15px] font-sans-bold;
+  }
+
+  /* Overline: uppercase section labels */
+  .text-overline {
+    @apply text-[11px] font-sans-semibold uppercase tracking-[1.5px] text-muted-foreground;
+  }
+
+  /* Body: primary content text */
+  .text-body {
+    @apply text-[15px] font-sans-medium text-primary;
+  }
+
+  /* Body small: secondary content, card meta */
+  .text-body-sm {
+    @apply text-[13px] font-sans-medium text-primary;
+  }
+
+  /* Caption: labels, hints, de-emphasized text */
+  .text-caption {
+    @apply text-[12px] font-sans-medium text-muted-foreground;
   }
 }

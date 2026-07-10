@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const updateScheme = useCallback(() => {
     if (themeMode === "system") {
-      Appearance.setColorScheme('unspecified');
+      Appearance.setColorScheme('unspecified' as ColorSchemeName);
       const resolved = Appearance.getColorScheme();
       setResolvedScheme(resolved);
     } else {
